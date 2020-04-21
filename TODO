@@ -1,0 +1,35 @@
+
+TODO ---------------------------------------------------------------------
+
+Folders for Configs/Params/Script/Args/Options under pipelines
+
+Debug python context menu
+   - copies .command.sh into .command.py and launches debug
+
+Debug docker context menu
+   - lanches docker container with work folder mapped (see .command.run docker run command) and attaches visual studio if possible
+
+Duplicate - pipelines context
+
+Copy Name - runs context (may not be supported)
+
+Max archives in settings - default to something reasonable (unset allows unlimited)
+
+COMPLETED ----------------------------------------------------------------
+
+Distinguish killed from failed by checking for exit code 143 (killed by NF) or 137 (killed by OS)
+
+Make more efficient by only decorating open folders in the run view
+
+*** NEED A Separate output window for each pipeline ***
+
+Only select storage path when creating a pipeline (don't add script at this step)
+   - currently it's required, will have to make optional, add support for removing/setting
+
+Add config support (running with config instead of run)
+
+Re-order configs (order matters) - added MoveUp/MoveDown context menu
+
+Make storage path a setting, so that it doesn't have to be set everytime
+
+Setting for Automatically Show Log on Nextflow exit
