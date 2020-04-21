@@ -1,0 +1,679 @@
+import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import * as mkdirp from 'mkdirp';
+import * as cp from 'child_process';
+import { Script } from 'vm';
+import { prototype } from 'events';
+import { State } from './state';
+import { Pipe } from 'stream';
+import { getVSCodeDownloadUrl } from 'vscode-test/out/util';
+
+export class Pipeline {
+
+   public mtimeMs: number = 0;
+
+   constructor(public readonly name: string,
+               public storagePath: vscode.Uri,
+               public config: Array<vscode.Uri> = new Array<vscode.Uri>(),
+               public option: Array<string> = new Array<string>(),
+               public arg: Array<string> = new Array<string>(),
+               public params?: vscode.Uri,
+               public script?: vscode.Uri) {
+   }
+}
+
+class PipelineResources {
+
+   outputCh: vscode.OutputChannel;
+   nextflow: cp.ChildProcess | undefined = undefined;
+
+   constructor(public readonly name: string) {
+      this.outputCh = vscode.window.createOutputChannel(name + " - Nextflow Sandbox");
+   }
+}
+
+export class Dependency extends vscode.TreeItem {
+
+   constructor(readonly name: string,
+               readonly contextValue: string,
+               readonly collapsibleState: vscode.TreeItemCollapsibleState,
+               readonly resourceUri?: vscode.Uri,
+               readonly command?: vscode.Command,
+               readonly pipeline?: string) {
+      super(name, collapsibleState);
+   }
+
+   get tooltip(): string | undefined {
+      return this.resourceUri?.fsPath;
+   }
+
+   get description(): string {
+      return '[' + this.contextValue + ']';
+   }
+}
+
+export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Dependency> {
+
+   private _onDidChangeTreeData: vscode.EventEmitter<Dependency | undefined> = new vscode.EventEmitter<Dependency | undefined>();
+   readonly onDidChangeTreeData: vscode.Event<Dependency | undefined> = this._onDidChangeTreeData.event;
+   private nameToResourcesMap: { [name: string]: PipelineResources; } = { };
+
+   constructor(private context: vscode.ExtensionContext,
+               private state: State,
+               private on: (event: string, pipeline: string) => void | undefined) {
+   }
+
+   refresh(): void {
+      this._onDidChangeTreeData.fire();
+   }
+
+   async add() {
+      // get name
+      const name = await vscode.window.showInputBox({ prompt: 'Enter pipeline name.' });
+      if (!name) {
+         return;
+      }
+
+      // get path to nextflow storage from settings
+      const storagePath = vscode.Uri.file((this.state.getConfigurationPropertyAsString('storagePath', '~/nextflow-sandbox')));
+
+      // make pipeline work root directory (remove existing first if requested)
+      const pipelineFolder = storagePath.fsPath + '/' + name;
+      if (this.pathExists(pipelineFolder)) {
+         let selection = await vscode.window.showWarningMessage('Pipeline "' + name + '" already exists at the specified storage path.  Would you like to replace it?', 'Yes, Replace', 'Cancel');
+         if (selection === 'Yes, Replace') {
+            try {
+               cp.spawn('rm', ['-r', pipelineFolder]).on('close', () => {
+                  this.doAdd(name, storagePath);
+               });
+            } catch (err) {
+               vscode.window.showWarningMessage(err.toString());
+            }
+         } else if (selection === 'Cancel') {
+            return;
+         }
+      } else {
+         this.doAdd(name, storagePath);
+      }
+   }
+
+   private doAdd(name: string, storagePath: vscode.Uri) {
+      // make pipeline folder (and archive folder)
+      const pipelineFolder = storagePath.fsPath + '/' + name;
+      const made = mkdirp.sync(pipelineFolder + '/archive');
+      if (made === null) {
+         vscode.window.showErrorMessage("mkdirp.Made === null (" + pipelineFolder + ")");
+         return;
+      }
+
+      // create new Pipeline object
+      let pipeline = new Pipeline(name, storagePath);
+
+      // add new Pipeline object to workspace state
+      this.state.addPipeline(pipeline);
+
+      // refresh view
+      this.refresh();
+
+      // invoke add event cb
+      this.on('added', name);
+   }
+
+   async addConfig(name: string) {
+      let pipeline = this.state.getPipeline(name);
+      if (!pipeline) {
+         vscode.window.showErrorMessage('Pipeline not found: ' + name);
+         return;
+      }
+      const config = await vscode.window.showOpenDialog({ canSelectFolders: false, canSelectFiles: true, canSelectMany: false, openLabel: 'Select Nextflow Config', filters: { 'Nextflow Config': ['config'] } });
+      if (config) {
+         pipeline.config.push(config[0]);
+         this.state.updatePipeline(pipeline);
+         this.refresh();
+      }
+   }
+
+   async addOption(name: string) {
+      let pipeline = this.state.getPipeline(name);
+      if (!pipeline) {
+         vscode.window.showErrorMessage('Pipeline not found: ' + name);
+         return;
+      }
+      const option = await vscode.window.showInputBox({ prompt: 'Enter custom option', placeHolder: 'e.g., -D=-Xmx8g' });
+      if (option) {
+         pipeline.option.push(option);
+         this.state.updatePipeline(pipeline);
+         this.refresh();
+      }
+   }
+
+   async addArg(name: string) {
+      let pipeline = this.state.getPipeline(name);
+      if (!pipeline) {
+         vscode.window.showErrorMessage('Pipeline not found: ' + name);
+         return;
+      }
+      const arg = await vscode.window.showInputBox({ prompt: 'Enter custom arg', placeHolder: 'e.g., -profile MY_PROFILE' });
+      if (arg) {
+         pipeline.arg.push(arg);
+         this.state.updatePipeline(pipeline);
+         this.refresh();
+      }
+   }
+
+   async setParams(name: string) {
+      let pipeline = this.state.getPipeline(name);
+      if (!pipeline) {
+         vscode.window.showErrorMessage('Pipeline not found: ' + name);
+         return;
+      }
+      const params = await vscode.window.showOpenDialog({ canSelectFolders: false, canSelectFiles: true, canSelectMany: false, openLabel: 'Select Nextflow Params', filters: { 'Nextflow Params': ['yml', 'yaml', 'json'] } });
+      if (params) {
+         pipeline.params = params[0];
+         this.state.updatePipeline(pipeline);
+         this.refresh();
+      }
+   }
+
+   async setScript(name: string) {
+      let pipeline = this.state.getPipeline(name);
+      if (!pipeline) {
+         vscode.window.showErrorMessage('Pipeline not found: ' + name);
+         return;
+      }
+      // get config file
+      const script = await vscode.window.showOpenDialog({ canSelectFolders: false, canSelectFiles: true, canSelectMany: false, openLabel: 'Select Nextflow Script', filters: { 'Nextflow Script': ['nf'] } });
+      if (script) {
+         pipeline.script = script[0];
+         this.state.updatePipeline(pipeline);
+         this.refresh();
+      }
+   }
+
+   async rem(name: string): Promise<boolean> {
+      const pipelineRes = this.nameToResourcesMap[name] || new PipelineResources(name);
+      if (pipelineRes.nextflow !== undefined) {
+         vscode.window.showWarningMessage('Pipeline is running; please stop it before attempting to remove');
+         return Promise.resolve(false);
+      }
+      let selection = await vscode.window.showWarningMessage('Delete "' + name + '" and work folder cache?  Script, parameter, configuration, and other file references will NOT be deleted', 'Yes, Delete', 'Cancel');
+      if (selection === 'Yes, Delete') {
+         const pipeline = this.state.getPipeline(name);
+         if (pipeline) {
+            let pipelineFolder = pipeline.storagePath.fsPath + '/' + name;
+            try {
+               const rm = cp.spawnSync('rm', ['-fr', pipelineFolder]);
+               if (rm.status === 0) {
+                  // hide/dispose output
+                  pipelineRes.outputCh.hide();
+                  pipelineRes.outputCh.dispose();
+                  this.state.remPipeline(name);
+                  this.refresh();
+                  // invoke removed event cb
+                  this.on('removed', name);
+                  return Promise.resolve(true);
+               } else { // failed
+                  vscode.window.showWarningMessage('Failed to remove: "' + pipelineFolder + '"');
+               }
+            } catch (err) {
+               vscode.window.showWarningMessage(err.toString());
+            }
+         } 
+      } 
+     return Promise.resolve(false);
+   }
+
+   remDep(dependency: Dependency): boolean {
+      if (!dependency.pipeline) {
+         return false;
+      }
+      const pipelineRes = this.nameToResourcesMap[dependency.pipeline] || new PipelineResources(dependency.pipeline);
+      if (pipelineRes.nextflow !== undefined) {
+         vscode.window.showWarningMessage('Pipeline is running; please stop it before attempting to remove dependencies');
+         return false;
+      }
+      let pipeline = this.state.getPipeline(dependency.pipeline);
+      if (pipeline) {
+         switch (dependency.contextValue) {
+            case 'config': 
+               if (dependency.resourceUri) { pipeline.config.splice(pipeline.config.indexOf(dependency.resourceUri), 1); }
+               break;
+            case 'option':
+               pipeline.option.splice(pipeline.option.indexOf(dependency.name), 1);
+               break;
+            case 'arg':
+               pipeline.arg.splice(pipeline.arg.indexOf(dependency.name), 1);
+               break;
+            case 'params':
+               pipeline.params = undefined;
+               break;
+            default:
+               return false;
+         }
+         this.state.updatePipeline(pipeline);
+         this.refresh();
+         return true;
+      }
+      return false;
+   }
+
+   async run(name: string, resume?: boolean | false) {
+      let pipeline = this.state.getPipeline(name);
+      if (!pipeline) {
+         vscode.window.showErrorMessage('Pipeline not found: ' + name);
+         return;
+      }
+      if (pipeline.script === undefined) {
+         vscode.window.showErrorMessage('Script must be defined');
+         return;
+      }
+
+      const pipelineFolder = path.join(pipeline.storagePath.fsPath, pipeline.name);
+      const workFolder = pipelineFolder + '/run';
+
+      // prompt
+      /*let selection = await vscode.window.showInformationMessage('"' + name + '" will run with configured options.  Would you like to edit the command-line before executing?', 'Run', 'Edit', 'Cancel');
+      if (selection === 'Edit') {
+         const edit = await vscode.window.showInputBox({ prompt: 'Edit nextflow command-line', value: command });
+         if (!edit) {
+            return;
+         }
+         command = edit.toString();
+      } else if (selection === 'Cancel') {
+         return;
+      }*/
+
+      // check work folder exists if resuming
+      if (resume) {
+         if (!this.pathExists(workFolder)) {
+            vscode.window.showWarningMessage('Pipeline cannot resume');
+            return;
+         }
+      } else { // !resume
+         // make run folder (move current run folder to archive first)
+         try {
+            const runName = this.parseRunName(name);
+            if (runName) {
+               let mv = cp.spawnSync('mv', ['-f', workFolder, path.join(pipelineFolder, 'archive', runName)]);
+               if (mv.status !== 0) {
+                  vscode.window.showWarningMessage('Failed to move current run folder to archive');
+               }
+            } else { // !runName (couldn't determine run name or no current run)
+               //vscode.window.showWarningMessage();
+            }
+         } catch (err) {
+            vscode.window.showWarningMessage(err.toString());
+         }
+      }
+
+      this.doRun(name, resume || false, workFolder);
+   }
+
+   async doRun(name: string, resume: boolean, workFolder: string) {
+      const pipeline = this.state.getPipeline(name);
+      if (!pipeline) {
+         return;
+      }
+      if (pipeline.script === undefined) {
+         vscode.window.showErrorMessage('Script must be defined');
+         return;
+      }
+      const pipelineFolder = path.join(pipeline.storagePath.fsPath, pipeline.name);
+
+      let pipelineRes = this.nameToResourcesMap[name] || new PipelineResources(name);
+      if (pipelineRes.nextflow !== undefined) {
+         return;
+      }
+      this.nameToResourcesMap[name] = pipelineRes;
+
+      if (!resume && !this.pathExists(workFolder)) {
+         const made = mkdirp.sync(workFolder);
+         if (made === null) {
+            vscode.window.showErrorMessage("mkdirp.Made === null (Failed to create: " + workFolder + ")");
+            return;
+         }
+      }
+
+      // setup params
+      let params: string[] = [];
+      pipeline.config.forEach(config => {
+         params.push('-c');
+         params.push('"' + config.path + '"');
+      });
+      pipeline.option.forEach(option => {
+         const tokens = option.split(' ');
+         params = params.concat(tokens);
+      });
+      params.push('-log');
+      params.push('"' + workFolder + '/.nextflow.log"');
+      params.push('run');
+      pipeline.arg.forEach(arg => {
+         const tokens = arg.split(' ');
+         params = params.concat(tokens);
+      });
+      if (pipeline.params) {
+         params.push('-params-file');
+         params.push('"' + pipeline.params.path + '"');
+      }
+      params.push('-w');
+      params.push('"' + workFolder + '"');
+      params.push('-with-report');
+      params.push('"' + workFolder + '/report.htm"');
+      if (resume) {
+         params.push('-resume');
+      }
+      params.push('"' + pipeline.script.path + '"');
+
+      // get path to nextflow exe from settings
+      const nextflowPath = this.state.getConfigurationPropertyAsString('executablePath', 'nextflow');
+
+      // formulate command
+      let command = nextflowPath;
+      params.forEach(param => {
+         command += ' ' + param;
+      });
+      command += '\r\n';
+
+      // clear-out last .nextflow.log (to prevent NF from making a backup)
+      try {
+         fs.writeFileSync(path.join(workFolder, '.nextflow.log'), '');
+      } catch (err) {}
+      // show .nextflow.log
+      //vscode.window.showTextDocument(vscode.Uri.file(path.join(workFolder, '.nextflow.log')));
+
+      // remove last report.htm (to prevent NF from making a backup)
+      try {
+         cp.spawnSync('rm', [path.join(workFolder, 'report.htm')]);
+      } catch (err) {}
+
+      // clear/show output
+      pipelineRes.outputCh.clear();
+      pipelineRes.outputCh.show();
+
+      // output command being executed
+      pipelineRes.outputCh.append(command);
+
+      // get last modified time of work folder to serve as the starting time of this run
+      const stats = fs.statSync(workFolder);
+      pipeline.mtimeMs = stats.mtimeMs;
+      this.state.updatePipeline(pipeline);
+
+      // spawn
+      const nf = cp.spawn(nextflowPath, params, { cwd: pipelineFolder });
+      pipelineRes.nextflow = nf;
+      this.refresh();
+
+      // invoke started event cb
+      this.on('started', name);
+
+      // stdout cb
+      nf.stdout.on('data', (data) => {
+         // invoke updated event cb
+         this.on('updated', name);
+         pipelineRes.outputCh.append(data.toString());
+      });
+
+      // stderr cb
+      nf.stderr.on('data', (data) => {
+         // invoke updated event cb
+         this.on('updated', name);
+         pipelineRes.outputCh.append(data.toString());
+      });
+
+      // close cb
+      nf.on('close', async (code) => {
+         pipelineRes.nextflow = undefined;
+         this.refresh();
+         // invoke stopped event cb
+         this.on('stopped', name);
+         // show log
+         const autoShowLog = this.state.getConfigurationPropertyAsBoolean('autoShowLog', true);
+         if (autoShowLog) {
+            vscode.window.showTextDocument(vscode.Uri.file(path.join(workFolder, '.nextflow.log')));
+         }
+         let selection = (code === 0 ? 
+            await vscode.window.showInformationMessage('Nextflow process exited with code: ' + code.toString(), 'Open Report') :
+            await vscode.window.showWarningMessage('Nextflow process exited with code: ' + code.toString(), 'Open Report'));
+         if (selection === 'Open Report') {
+            cp.spawn('open', [path.join(workFolder, 'report.htm')]);
+         }
+      });
+   }
+
+   stop(name: string) {
+      let pipelineRes = this.nameToResourcesMap[name] || new PipelineResources(name);
+      if (pipelineRes.nextflow === undefined) {
+         vscode.window.showWarningMessage('Pipeline not running');
+         return;
+      }
+
+      pipelineRes.nextflow.kill("SIGINT");
+   }
+
+   config(name: string) {
+      const pipeline = this.state.getPipeline(name);
+      if (!pipeline) {
+         return;
+      }
+      if (pipeline.script === undefined) {
+         vscode.window.showErrorMessage('Script must be defined');
+         return;
+      }
+      const pipelineFolder = path.join(pipeline.storagePath.fsPath, pipeline.name);
+
+      let pipelineRes = this.nameToResourcesMap[name] || new PipelineResources(name);
+      if (pipelineRes.nextflow !== undefined) {
+         return;
+      }
+      this.nameToResourcesMap[name] = pipelineRes;
+
+      // setup params
+      let params: string[] = [];
+      pipeline.config.forEach(config => {
+         params.push('-c');
+         params.push('"' + config.path + '"');
+      });
+      pipeline.option.forEach(option => {
+         const tokens = option.split(' ');
+         params = params.concat(tokens);
+      });
+      params.push('config');
+      params.push('"' + pipeline.script.path + '"');
+
+      // get path to nextflow exe from settings
+      const nextflowPath = this.state.getConfigurationPropertyAsString('executablePath', 'nextflow');
+
+      // formulate command
+      let command = nextflowPath;
+      params.forEach(param => {
+         command += ' ' + param;
+      });
+      command += '\r\n';
+
+      // clear/show output
+      pipelineRes.outputCh.clear();
+      pipelineRes.outputCh.show();
+
+      // output command being executed
+      pipelineRes.outputCh.append(command);
+
+      // spawn
+      const nf = cp.spawn(nextflowPath, params, { cwd: pipelineFolder });
+
+      pipelineRes.nextflow = nf;
+      this.refresh();
+
+      // invoke started event cb
+      //this.on('started', name);
+
+      // stdout cb
+      nf.stdout.on('data', (data) => {
+         // invoke updated event cb
+         //this.on('updated', name);
+         pipelineRes.outputCh.append(data.toString());
+      });
+
+      // stderr cb
+      nf.stderr.on('data', (data) => {
+         // invoke updated event cb
+         //this.on('updated', name);
+         pipelineRes.outputCh.append(data.toString());
+      });
+
+      // close cb
+      nf.on('close', async (code) => {
+         pipelineRes.nextflow = undefined;
+         this.refresh();
+         // invoke stopped event cb
+         //this.on('stopped', name);
+         let selection = (code === 0 ? 
+            await vscode.window.showInformationMessage('Nextflow process exited with code: ' + code.toString(), 'OK') :
+            await vscode.window.showWarningMessage('Nextflow process exited with code: ' + code.toString()), 'OK');
+      });
+   }
+
+   moveUp(dependency: Dependency): boolean {
+      if (!dependency.pipeline) {
+         return false;
+      }
+      const pipelineRes = this.nameToResourcesMap[dependency.pipeline] || new PipelineResources(dependency.pipeline);
+      if (pipelineRes.nextflow !== undefined) {
+         vscode.window.showWarningMessage('Pipeline is running; please stop it before attempting to move dependencies');
+         return false;
+      }
+      let pipeline = this.state.getPipeline(dependency.pipeline);
+      if (pipeline) {
+         switch (dependency.contextValue) {
+            case 'config': 
+               if (dependency.resourceUri) {
+                  const index = pipeline.config.indexOf(dependency.resourceUri);
+                  if (index >= 1) {
+                     pipeline.config.splice(index-1, 0, pipeline.config.splice(index, 1)[0]);
+                  }
+               }
+               break;
+            case 'option': // TODO
+            case 'arg':
+            case 'params':
+            default:
+               return false;
+         }
+         this.state.updatePipeline(pipeline);
+         this.refresh();
+         return true;
+      }
+      return false;
+   }
+
+   moveDown(dependency: Dependency): boolean {
+      if (!dependency.pipeline) {
+         return false;
+      }
+      const pipelineRes = this.nameToResourcesMap[dependency.pipeline] || new PipelineResources(dependency.pipeline);
+      if (pipelineRes.nextflow !== undefined) {
+         vscode.window.showWarningMessage('Pipeline is running; please stop it before attempting to move dependencies');
+         return false;
+      }
+      let pipeline = this.state.getPipeline(dependency.pipeline);
+      if (pipeline) {
+         switch (dependency.contextValue) {
+            case 'config': 
+               if (dependency.resourceUri) {
+                  const index = pipeline.config.indexOf(dependency.resourceUri);
+                  if (index >= 0 && index < pipeline.config.length-1) {
+                     pipeline.config.splice(index+1, 0, pipeline.config.splice(index, 1)[0]);
+                  }
+               }
+               break;
+            case 'option': // TODO
+            case 'arg':
+            case 'params':
+            default:
+               return false;
+         }
+         this.state.updatePipeline(pipeline);
+         this.refresh();
+         return true;
+      }
+      return false;
+   }
+
+   getChildren(element?: Dependency): vscode.ProviderResult<Dependency[]> {
+      if (element) {
+         let pipeline = this.state.getPipeline(element.name);
+         if (pipeline) {
+            let children = new Array<Dependency>();
+            // script
+            if (pipeline.script) {
+               children.push(new Dependency(path.basename(pipeline.script.path), 'script', vscode.TreeItemCollapsibleState.None, vscode.Uri.file(pipeline.script.path), { command: 'pipelines.openFile', title: "Open File", arguments: [vscode.Uri.file(pipeline.script.path)] }, element.name));
+            }
+            // config
+            pipeline.config.forEach(config => {
+               children.push(new Dependency(path.basename(config.path), 'config', vscode.TreeItemCollapsibleState.None, config, { command: 'pipelines.openFile', title: "Open File", arguments: [vscode.Uri.file(config.path)] }, element.name));
+            });
+            // option
+            pipeline.option.forEach(option => {
+               children.push(new Dependency(option, 'option', vscode.TreeItemCollapsibleState.None, undefined, undefined, element.name));
+            });
+            // arg
+            pipeline.arg.forEach(arg => {
+               children.push(new Dependency(arg, 'arg', vscode.TreeItemCollapsibleState.None, undefined, undefined, element.name));
+            });
+            // params
+            if (pipeline.params) {
+               let params = new Dependency(path.basename(pipeline.params.path), 'params', vscode.TreeItemCollapsibleState.None, pipeline.params, { command: 'pipelines.openFile', title: "Open File", arguments: [vscode.Uri.file(pipeline.params.path)] }, element.name);
+               children.push(params);
+            }
+
+            return Promise.resolve(children);
+         }
+      } else {
+         let pipelineArr = this.state.getPipelines();
+         if (pipelineArr) {
+            let children = new Array<Dependency>();
+            pipelineArr.forEach(name => {
+               const pipelineRes = this.nameToResourcesMap[name] || new PipelineResources(name);
+               let dependency = new Dependency(name, pipelineRes.nextflow !== undefined ? 'running' : 'stopped', vscode.TreeItemCollapsibleState.Collapsed);
+               children.push(dependency);
+            });
+
+            return Promise.resolve(children);
+         }
+      }
+
+      return Promise.resolve([]);
+   }
+
+   getTreeItem(element: Dependency): Dependency {
+      return element;
+   }
+
+   private parseRunName(name: string): string | undefined {
+      const pipeline = this.state.getPipeline(name);
+      if (pipeline) {
+         try {
+            const logPath = path.join(pipeline.storagePath.fsPath, name, 'run', '.nextflow.log');
+            const contents = fs.readFileSync(logPath).toString();
+            const searchString = 'Run name: ';
+            let index = contents.indexOf(searchString, 0);
+            if (index >= 0) {
+               const runNameIndex = index + searchString.length;
+               const eolIndex = contents.indexOf('\n', index);
+               return contents.substring(runNameIndex, eolIndex);
+            }
+         } catch(err) {}
+      }
+      return undefined;
+   }
+
+   private pathExists(path: string): boolean {
+      try {
+         fs.accessSync(path);
+      } catch (err) {
+         return false;
+      }
+
+      return true;
+   }
+}

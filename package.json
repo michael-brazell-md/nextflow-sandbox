@@ -1,0 +1,313 @@
+{
+   "name": "nextflow-sandbox",
+   "displayName": "Nextflow Sandbox",
+   "description": "Run and track Nextflow pipelines",
+   "publisher": "mechdyne",
+   "version": "0.0.1",
+   "engines": {
+      "vscode": "^1.41.0"
+   },
+   "categories": [
+      "Other"
+   ],
+   "activationEvents": [
+      "onView:pipelines",
+      "onView:runs"
+   ],
+   "main": "./out/extension.js",
+   "contributes": {
+      "configuration": {
+         "title": "Nextflow Sandbox",
+         "properties": {
+            "nextflow-sandbox.executablePath": {
+               "type": "string",
+               "description": "Path to the Nextflow executable",
+               "default": "nextflow",
+               "title": "Nextflow Executable Path"
+            },
+            "nextflow-sandbox.storagePath": {
+               "type": "string",
+               "description": "Path where Nextflow will store local work",
+               "default": "~/nextflow-sandbox",
+               "title": "Nextflow Storage Path"
+            },
+            "nextflow-sandbox.autoShowLog": {
+               "type": "boolean",
+               "description": "Automatically show log upon Nextflow exit",
+               "default": true,
+               "title": "Automatically Show Log Upon Nextflow exit"
+            }
+         }
+      },
+      "viewsContainers": {
+         "activitybar": [
+            {
+               "id": "nftr-explorer",
+               "title": "Nextflow Sandbox",
+               "icon": "media/NF.svg"
+            }
+         ]
+      },
+      "views": {
+         "nftr-explorer": [
+            {
+               "id": "pipelines",
+               "name": "Pipelines"
+            },
+            {
+               "id": "runs",
+               "name": "Runs"
+            }
+         ]
+      },
+      "commands": [
+         {
+            "command": "pipelines.add",
+            "title": "New",
+            "icon": {
+               "light": "resources/light/add.svg",
+               "dark": "resources/dark/add.svg"
+            }
+         },
+         {
+            "command": "pipelines.refresh",
+            "title": "Refresh",
+            "icon": {
+               "light": "resources/light/refresh.svg",
+               "dark": "resources/dark/refresh.svg"
+            }
+         },
+         {
+            "command": "pipelines.addConfig",
+            "title": "Add Config File..."
+         },
+         {
+            "command": "pipelines.addOption",
+            "title": "Add Option..."
+         },
+         {
+            "command": "pipelines.addArg",
+            "title": "Add Arg..."
+         },
+         {
+            "command": "pipelines.setParams",
+            "title": "Set Params File..."
+         },
+         {
+            "command": "pipelines.setScript",
+            "title": "Set Script File..."
+         },
+         {
+            "command": "pipelines.run",
+            "title": "Run",
+            "icon": {
+               "light": "resources/light/run.svg",
+               "dark": "resources/dark/run.svg"
+            }
+         },
+         {
+            "command": "pipelines.resume",
+            "title": "Resume",
+            "icon": {
+               "light": "resources/light/resume.svg",
+               "dark": "resources/dark/resume.svg"
+            }
+         },
+         {
+            "command": "pipelines.stop",
+            "title": "Stop",
+            "icon": {
+               "light": "resources/light/stop.svg",
+               "dark": "resources/dark/stop.svg"
+            }
+         },
+         {
+            "command": "pipelines.config",
+            "title": "Config"
+         },
+         {
+            "command": "pipelines.remove",
+            "title": "Delete"
+         },
+         {
+            "command": "pipelines.removeDep",
+            "title": "Remove Reference"
+         },
+         {
+            "command": "pipelines.moveConfigUp",
+            "title": "Move Up"
+         },
+         {
+            "command": "pipelines.moveConfigDown",
+            "title": "Move Down"
+         },
+         {
+            "command": "pipelines.openFile",
+            "title": "Open File"
+         },
+         {
+            "command": "runs.showFile",
+            "title": "Show File"
+         },
+         {
+            "command": "runs.openFile",
+            "title": "Open File"
+         },
+         {
+            "command": "runs.revealInFinder",
+            "title": "Reveal in Finder"
+         },
+         {
+            "command": "runs.openInTerminal",
+            "title": "Open in Terminal"
+         },
+         {
+            "command": "runs.delete",
+            "title": "Delete"
+         },
+         {
+            "command": "runs.refresh",
+            "title": "Refresh",
+            "icon": {
+               "light": "resources/light/refresh.svg",
+               "dark": "resources/dark/refresh.svg"
+            }
+         },
+         {
+            "command": "runs.toggleDecorated",
+            "title": "Toggle Decorated View"
+         }
+      ],
+      "menus": {
+         "view/title": [
+            {
+               "command": "pipelines.add",
+               "when": "view == pipelines",
+               "group": "navigation"
+            },
+            {
+               "command": "pipelines.refresh",
+               "when": "view == pipelines",
+               "group": "navigation"
+            },
+            {
+               "command": "runs.refresh",
+               "when": "view == runs",
+               "group": "navigation"
+            }
+         ],
+         "view/item/context": [
+            {
+               "command": "pipelines.run",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.a"
+            },
+            {
+               "command": "pipelines.resume",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.a"
+            },
+            {
+               "command": "pipelines.stop",
+               "when": "view == pipelines && viewItem == running",
+               "group": "pipeline.a"
+            },
+            {
+               "command": "pipelines.config",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.b"
+            },
+            {
+               "command": "pipelines.addConfig",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.c"
+            },
+            {
+               "command": "pipelines.addOption",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.c"
+            },
+            {
+               "command": "pipelines.addArg",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.c"
+            },
+            {
+               "command": "pipelines.setParams",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.c"
+            },
+            {
+               "command": "pipelines.setScript",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.d"
+            },
+            {
+               "command": "pipelines.remove",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.z"
+            },
+            {
+               "command": "pipelines.removeDep",
+               "when": "view == pipelines && viewItem == config || viewItem == params || viewItem == option || viewItem == arg",
+               "group": "pipeline.z"
+            },
+            {
+               "command": "pipelines.moveConfigUp",
+               "when": "view == pipelines && viewItem == config",
+               "group": "pipeline.y"
+            },
+            {
+               "command": "pipelines.moveConfigDown",
+               "when": "view == pipelines && viewItem == config",
+               "group": "pipeline.y"
+            },
+            {
+               "command": "runs.revealInFinder",
+               "when": "view == runs && viewItem == directory",
+               "group": "run.a"
+            },
+            {
+               "command": "runs.openInTerminal",
+               "when": "view == runs && viewItem == directory",
+               "group": "run.a"
+            },
+            {
+               "command": "runs.delete",
+               "when": "view == runs && viewItem == file || viewItem == directory",
+               "group": "run.b"
+            },
+            {
+               "command": "runs.openFile",
+               "when": "view == runs && viewItem == file",
+               "group": "run.a"
+            },
+            {
+               "command": "runs.toggleDecorated",
+               "when": "view == runs && viewItem == directory",
+               "group": "run.c"
+            }
+         ]
+      }
+   },
+   "scripts": {
+      "vscode:prepublish": "npm run compile",
+      "compile": "tsc -p ./",
+      "watch": "tsc -watch -p ./",
+      "pretest": "npm run compile",
+      "test": "node ./out/test/runTest.js"
+   },
+   "devDependencies": {
+      "@types/glob": "^7.1.1",
+      "@types/mkdirp": "^0.5.2",
+      "@types/mocha": "^5.2.7",
+      "@types/node": "^12.11.7",
+      "@types/rimraf": "^2.0.4",
+      "@types/vscode": "^1.41.0",
+      "glob": "^7.1.5",
+      "mocha": "^6.2.2",
+      "tslint": "^5.20.0",
+      "typescript": "^3.6.4",
+      "vscode-test": "^1.2.2"
+   }
+}
