@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as fe from "./fileExplorer";
+import * as cp from 'child_process';
 import * as pipelines from './pipelines';
 import { State } from './state';
 import { parentPort } from 'worker_threads';
@@ -191,7 +192,11 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          treeItem.contextValue = 'file';
       }
       else if (element.type === vscode.FileType.Directory && element.resourceUri !== undefined) {
-         treeItem.contextValue = 'directory';
+         if (element.isWorkSubfolder()) {
+            treeItem.contextValue = 'work_subdirectory';
+         } else {
+            treeItem.contextValue = 'directory';
+         }
       }
       treeItem.description = element.description;
       treeItem.resourceUri = element.resourceUri;
@@ -384,7 +389,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          const logPath = path.join(pipeline.storagePath.fsPath, pipeline.name, 'run', '.nextflow.log');
          const contents = fs.readFileSync(logPath).toString();
          const searchString = 'Run name: ';
-         let index = contents.indexOf(searchString, 0);
+         const index = contents.indexOf(searchString, 0);
          if (index >= 0) {
             const runNameIndex = index + searchString.length;
             const eolIndex = contents.indexOf('\n', index);
@@ -397,13 +402,80 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
 
    openInTerminal(uri: vscode.Uri) {
       const terminal = vscode.window.createTerminal('Nextflow Sandbox');
-      let fsPath = uri.fsPath;
+      const fsPath = uri.fsPath;
       terminal.sendText('cd "' + fsPath + '"');
       terminal.show();
    }
 
    debug() {
       //vscode.debug.startDebugging();
+   }
+
+   launchContainer(uri: vscode.Uri) {
+      try {
+         const command_runPath = path.join(uri.fsPath, '.command.run');
+         const contents = fs.readFileSync(command_runPath).toString();
+         const searchString = 'docker run ';
+         const index = contents.indexOf(searchString, 0);
+         if (index < 0) {
+            // not found
+            vscode.window.showWarningMessage('Docker \'run\' command not found in .command.run; unable to launch container');
+            return;
+         }
+
+         const startIndex = index;
+         const endIndex = contents.indexOf(' -c ', index);
+         let command = contents.substring(startIndex, endIndex);
+
+         // replace occurrences of '$PWD' with the uri path
+         command = command.replace(/\"\$PWD\"/g, uri.fsPath);
+
+         // split command into tokens
+         const commandTokens = command.split(' ');
+         const containerName = commandTokens[commandTokens.length-1];
+
+         // setup docker run params
+         let params: string[] = [];
+         params.push('run');
+         params.push('-it');
+         for (let i = 0; i < commandTokens.length-1; i++) {
+            switch (commandTokens[i]) {
+               case '-v':
+                  // don't repeat volume maps
+                  if (params.indexOf(commandTokens[i+1]) < 0) {
+                     params.push(commandTokens[i]); i++;
+                     params.push(commandTokens[i]);
+                  } else {
+                     // volume already mapped
+                     i++;
+                  }
+                  break;
+               case '-w':
+               case '--entrypoint':
+                  params.push(commandTokens[i]); i++;
+                  params.push(commandTokens[i]);
+                  break;
+            }
+         }
+         params.push(containerName);
+
+         // formulate docker run command
+         let docker = 'docker';
+         params.forEach(param => {
+            docker += ' ' + param;
+         });
+
+         // create/show terminal
+         let terminal = vscode.window.createTerminal(containerName + " - Nextflow Sandbox");
+         terminal.show();
+         terminal.processId.then(pid => {
+            // output command being executed
+            // (this will execute the command)
+            terminal.sendText(docker, true);
+         });
+      } catch(err) {
+         vscode.window.showWarningMessage('Something went wrong; failed to launch container');
+      }
    }
 
    private pathExists(path: string): boolean {

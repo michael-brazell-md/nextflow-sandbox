@@ -1,7 +1,7 @@
 {
    "name": "nextflow-sandbox",
    "displayName": "Nextflow Sandbox",
-   "description": "Run and track Nextflow pipelines",
+   "description": "Enhanced testing environment for Nextflow pipelines",
    "publisher": "mechdyne",
    "version": "0.0.1",
    "engines": {
@@ -176,6 +176,10 @@
          {
             "command": "runs.toggleDecorated",
             "title": "Toggle Decorated View"
+         },
+         {
+            "command": "runs.launchContainer",
+            "title": "Launch Container"
          }
       ],
       "menus": {
@@ -218,27 +222,27 @@
                "group": "pipeline.b"
             },
             {
-               "command": "pipelines.addConfig",
+               "command": "pipelines.setScript",
                "when": "view == pipelines && viewItem == stopped",
                "group": "pipeline.c"
+            },
+            {
+               "command": "pipelines.addConfig",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.d"
             },
             {
                "command": "pipelines.addOption",
                "when": "view == pipelines && viewItem == stopped",
-               "group": "pipeline.c"
+               "group": "pipeline.d"
             },
             {
                "command": "pipelines.addArg",
                "when": "view == pipelines && viewItem == stopped",
-               "group": "pipeline.c"
+               "group": "pipeline.d"
             },
             {
                "command": "pipelines.setParams",
-               "when": "view == pipelines && viewItem == stopped",
-               "group": "pipeline.c"
-            },
-            {
-               "command": "pipelines.setScript",
                "when": "view == pipelines && viewItem == stopped",
                "group": "pipeline.d"
             },
@@ -286,6 +290,11 @@
                "command": "runs.toggleDecorated",
                "when": "view == runs && viewItem == directory",
                "group": "run.c"
+            },
+            {
+               "command": "runs.launchContainer",
+               "when": "view == runs && viewItem == work_subdirectory",
+               "group": "run.d"
             }
          ]
       }

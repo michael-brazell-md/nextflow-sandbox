@@ -192,8 +192,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
    }
 
    async rem(name: string): Promise<boolean> {
-      const pipelineRes = this.nameToResourcesMap[name] || new PipelineResources(name);
-      if (pipelineRes.nextflow !== undefined) {
+      const pipelineRes = this.nameToResourcesMap[name];
+      if (pipelineRes && pipelineRes.nextflow !== undefined) {
          vscode.window.showWarningMessage('Pipeline is running; please stop it before attempting to remove');
          return Promise.resolve(false);
       }
@@ -206,8 +206,10 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                const rm = cp.spawnSync('rm', ['-fr', pipelineFolder]);
                if (rm.status === 0) {
                   // hide/dispose output
-                  pipelineRes.outputCh.hide();
-                  pipelineRes.outputCh.dispose();
+                  if (pipelineRes) {
+                     pipelineRes.outputCh.hide();
+                     pipelineRes.outputCh.dispose();
+                  }
                   this.state.remPipeline(name);
                   this.refresh();
                   // invoke removed event cb
@@ -228,8 +230,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       if (!dependency.pipeline) {
          return false;
       }
-      const pipelineRes = this.nameToResourcesMap[dependency.pipeline] || new PipelineResources(dependency.pipeline);
-      if (pipelineRes.nextflow !== undefined) {
+      const pipelineRes = this.nameToResourcesMap[dependency.pipeline];
+      if (pipelineRes && pipelineRes.nextflow !== undefined) {
          vscode.window.showWarningMessage('Pipeline is running; please stop it before attempting to remove dependencies');
          return false;
       }
@@ -442,13 +444,15 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
    }
 
    stop(name: string) {
-      let pipelineRes = this.nameToResourcesMap[name] || new PipelineResources(name);
-      if (pipelineRes.nextflow === undefined) {
-         vscode.window.showWarningMessage('Pipeline not running');
-         return;
-      }
+      const pipelineRes = this.nameToResourcesMap[name];
+      if (pipelineRes) {
+         if (pipelineRes.nextflow === undefined) {
+            vscode.window.showWarningMessage('Pipeline not running');
+            return;
+         }
 
-      pipelineRes.nextflow.kill("SIGINT");
+         pipelineRes.nextflow.kill("SIGINT");
+      }
    }
 
    config(name: string) {
@@ -537,8 +541,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       if (!dependency.pipeline) {
          return false;
       }
-      const pipelineRes = this.nameToResourcesMap[dependency.pipeline] || new PipelineResources(dependency.pipeline);
-      if (pipelineRes.nextflow !== undefined) {
+      const pipelineRes = this.nameToResourcesMap[dependency.pipeline];
+      if (pipelineRes && pipelineRes.nextflow !== undefined) {
          vscode.window.showWarningMessage('Pipeline is running; please stop it before attempting to move dependencies');
          return false;
       }
@@ -570,8 +574,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       if (!dependency.pipeline) {
          return false;
       }
-      const pipelineRes = this.nameToResourcesMap[dependency.pipeline] || new PipelineResources(dependency.pipeline);
-      if (pipelineRes.nextflow !== undefined) {
+      const pipelineRes = this.nameToResourcesMap[dependency.pipeline];
+      if (pipelineRes && pipelineRes.nextflow !== undefined) {
          vscode.window.showWarningMessage('Pipeline is running; please stop it before attempting to move dependencies');
          return false;
       }
@@ -633,8 +637,9 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          if (pipelineArr) {
             let children = new Array<Dependency>();
             pipelineArr.forEach(name => {
-               const pipelineRes = this.nameToResourcesMap[name] || new PipelineResources(name);
-               let dependency = new Dependency(name, pipelineRes.nextflow !== undefined ? 'running' : 'stopped', vscode.TreeItemCollapsibleState.Collapsed);
+               const pipelineRes = this.nameToResourcesMap[name];
+               const contextValue = pipelineRes && pipelineRes.nextflow ? 'running' : 'stopped';
+               let dependency = new Dependency(name, contextValue, vscode.TreeItemCollapsibleState.Collapsed);
                children.push(dependency);
             });
 

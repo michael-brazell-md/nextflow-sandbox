@@ -1,13 +1,21 @@
 
 TODO ---------------------------------------------------------------------
 
+Keep last run/pipeline folder expanded config between activates (store in state)
+
+Name (?)
+   - Nextflow Workshop 
+   - Nextflow Interactive
+   - Visual Nextflow
+   - Nextflow is Fun
+   - Next-level Nextflow
+   - I Heart Nextflow
+   - Nextflow for Humans
+
 Folders for Configs/Params/Script/Args/Options under pipelines
 
 Debug python context menu
    - copies .command.sh into .command.py and launches debug
-
-Debug docker context menu
-   - lanches docker container with work folder mapped (see .command.run docker run command) and attaches visual studio if possible
 
 Duplicate - pipelines context
 
@@ -33,3 +41,6 @@ Re-order configs (order matters) - added MoveUp/MoveDown context menu
 Make storage path a setting, so that it doesn't have to be set everytime
 
 Setting for Automatically Show Log on Nextflow exit
+
+Debug docker context menu
+   - lanches docker container with work folder mapped (see .command.run docker run command) and attaches visual studio if possible

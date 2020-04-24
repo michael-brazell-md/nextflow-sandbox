@@ -182,6 +182,12 @@ export class NfSandbox {
       this.registerCommand(context, 'runs.toggleDecorated', (args: any) => {
          this.runsTreeDataProvider.toggleDecorated();
       });
+
+      this.registerCommand(context, 'runs.launchContainer', (resource: runs.Dependency) => {
+         if (resource.resourceUri) {
+            this.runsTreeDataProvider.launchContainer(resource.resourceUri);
+         }
+      });
    }
    
    private registerCommand(context: vscode.ExtensionContext, command: string, callback: (...args: any[]) => any, thisArg?: any) {
