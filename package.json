@@ -268,18 +268,18 @@
             },
             {
                "command": "runs.revealInFinder",
-               "when": "view == runs && viewItem == directory",
+               "when": "view == runs && viewItem == directory || viewItem == work_subdirectory",
                "group": "run.a"
             },
             {
                "command": "runs.openInTerminal",
-               "when": "view == runs && viewItem == directory",
+               "when": "view == runs && viewItem == directory || viewItem == work_subdirectory",
                "group": "run.a"
             },
             {
                "command": "runs.delete",
-               "when": "view == runs && viewItem == file || viewItem == directory",
-               "group": "run.b"
+               "when": "view == runs && viewItem == file || viewItem == directory || viewItem == work_subdirectory",
+               "group": "run.z"
             },
             {
                "command": "runs.openFile",
@@ -288,7 +288,7 @@
             },
             {
                "command": "runs.toggleDecorated",
-               "when": "view == runs && viewItem == directory",
+               "when": "view == runs && viewItem == directory || viewItem == work_subdirectory",
                "group": "run.c"
             },
             {
