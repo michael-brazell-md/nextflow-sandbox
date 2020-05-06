@@ -289,7 +289,7 @@
             {
                "command": "runs.toggleDecorated",
                "when": "view == runs && viewItem == directory || viewItem == work_subdirectory",
-               "group": "run.c"
+               "group": "run.y"
             },
             {
                "command": "runs.launchContainer",

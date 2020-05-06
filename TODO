@@ -1,6 +1,8 @@
 
 TODO ---------------------------------------------------------------------
 
+Folders for Configs/Params/Script/Args/Options under pipelines - like runs, usual actual folder structure on disk
+
 Keep last run/pipeline folder expanded config between activates (store in state)
 
 Name (?)
@@ -11,8 +13,6 @@ Name (?)
    - Next-level Nextflow
    - I Heart Nextflow
    - Nextflow for Humans
-
-Folders for Configs/Params/Script/Args/Options under pipelines
 
 Debug python context menu
    - copies .command.sh into .command.py and launches debug
