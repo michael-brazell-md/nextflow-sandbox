@@ -235,7 +235,7 @@
             },
             {
                "command": "pipelines.removeDep",
-               "when": "view == pipelines && viewItem == config || viewItem == params || viewItem == option || viewItem == arg",
+               "when": "view == pipelines && viewItem == config || viewItem == params || viewItem == script",
                "group": "pipeline.z"
             },
             {
