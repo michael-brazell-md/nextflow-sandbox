@@ -1,8 +1,6 @@
 
 TODO ---------------------------------------------------------------------
 
-Folders for Configs/Params/Script/Args/Options under pipelines - like runs, usual actual folder structure on disk
-
 Keep last run/pipeline folder expanded config between activates (store in state)
 
 Name (?)
@@ -44,3 +42,5 @@ Setting for Automatically Show Log on Nextflow exit
 
 Debug docker context menu
    - lanches docker container with work folder mapped (see .command.run docker run command) and attaches visual studio if possible
+
+Added settings.json for args/options

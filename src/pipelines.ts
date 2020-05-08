@@ -36,8 +36,8 @@ class PipelineResources {
 export class Dependency extends vscode.TreeItem {
 
    constructor(readonly name: string,
-               readonly contextValue: string,
-               readonly collapsibleState: vscode.TreeItemCollapsibleState,
+               readonly contextValue?: string,
+               readonly collapsibleState?: vscode.TreeItemCollapsibleState,
                readonly resourceUri?: vscode.Uri,
                readonly command?: vscode.Command,
                readonly pipeline?: string) {
@@ -48,8 +48,11 @@ export class Dependency extends vscode.TreeItem {
       return this.resourceUri?.fsPath;
    }
 
-   get description(): string {
-      return '[' + this.contextValue + ']';
+   get description(): string | undefined {
+      if (this.contextValue === 'running' || this.contextValue === 'stopped') {
+         return '[' + this.contextValue + ']';
+      }
+      return undefined;
    }
 }
 
@@ -62,6 +65,23 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
    constructor(private context: vscode.ExtensionContext,
                private state: State,
                private on: (event: string, pipeline: string) => void | undefined) {
+      // watch settings.json for changes
+      let pipelineArr = this.state.getPipelines();
+      if (pipelineArr) {
+         let children = new Array<Dependency>();
+         pipelineArr.forEach(name => {
+            const pipeline = this.state.getPipeline(name);
+            if (pipeline) {
+               this.watch(vscode.Uri.file(path.join(pipeline.storagePath.fsPath, name, 'settings.json')), { recursive: false, excludes: [] });
+            }
+         });
+      }
+   }
+
+   private pipelineResources(name: string): PipelineResources {
+      const res = this.nameToResourcesMap[name] || new PipelineResources(name);
+      this.nameToResourcesMap[name] = res;
+      return res;
    }
 
    refresh(): void {
@@ -106,6 +126,27 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          vscode.window.showErrorMessage("mkdirp.Made === null (" + pipelineFolder + ")");
          return;
       }
+
+      // make settings.json
+      const settings = vscode.Uri.parse('untitled:' + path.join(pipelineFolder, 'settings.json'));
+      vscode.workspace.openTextDocument(settings).then(document => {
+         const edit = new vscode.WorkspaceEdit();
+         edit.insert(settings, new vscode.Position(0, 0), '{\n   "args": [\n   ],\n   "options": [\n   ]\n}');
+         vscode.workspace.applyEdit(edit).then(success => {
+            if (success) {
+               document.save().then(success => {
+                  if (success) {
+                     // watch for changes (doesn't work)
+                     const watcher = this.watch(document.uri, { recursive: false, excludes: [] });
+                     const pause = true;
+                  }
+               });
+            } else {
+               vscode.window.showErrorMessage("applyEdit failed");
+               return;
+            }
+         });
+      });
 
       // create new Pipeline object
       let pipeline = new Pipeline(name, storagePath);
@@ -250,6 +291,9 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             case 'params':
                pipeline.params = undefined;
                break;
+            case 'script':
+               pipeline.script = undefined;
+               break;
             default:
                return false;
          }
@@ -323,11 +367,10 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       }
       const pipelineFolder = path.join(pipeline.storagePath.fsPath, pipeline.name);
 
-      let pipelineRes = this.nameToResourcesMap[name] || new PipelineResources(name);
+      const pipelineRes = this.pipelineResources(name);
       if (pipelineRes.nextflow !== undefined) {
          return;
       }
-      this.nameToResourcesMap[name] = pipelineRes;
 
       if (!resume && !this.pathExists(workFolder)) {
          const made = mkdirp.sync(workFolder);
@@ -466,11 +509,10 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       }
       const pipelineFolder = path.join(pipeline.storagePath.fsPath, pipeline.name);
 
-      let pipelineRes = this.nameToResourcesMap[name] || new PipelineResources(name);
+      const pipelineRes = this.pipelineResources(name);
       if (pipelineRes.nextflow !== undefined) {
          return;
       }
-      this.nameToResourcesMap[name] = pipelineRes;
 
       // setup params
       let params: string[] = [];
@@ -608,6 +650,9 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          let pipeline = this.state.getPipeline(element.name);
          if (pipeline) {
             let children = new Array<Dependency>();
+            // settings.json
+            const settingsPath = path.join(pipeline.storagePath.fsPath, pipeline.name, 'settings.json');
+            children.push(new Dependency('settings.json', undefined, vscode.TreeItemCollapsibleState.None, vscode.Uri.file(settingsPath), { command: 'pipelines.openFile', title: "Open File", arguments: [vscode.Uri.file(settingsPath)] }, element.name));
             // script
             if (pipeline.script) {
                children.push(new Dependency(path.basename(pipeline.script.path), 'script', vscode.TreeItemCollapsibleState.None, vscode.Uri.file(pipeline.script.path), { command: 'pipelines.openFile', title: "Open File", arguments: [vscode.Uri.file(pipeline.script.path)] }, element.name));
@@ -615,14 +660,6 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             // config
             pipeline.config.forEach(config => {
                children.push(new Dependency(path.basename(config.path), 'config', vscode.TreeItemCollapsibleState.None, config, { command: 'pipelines.openFile', title: "Open File", arguments: [vscode.Uri.file(config.path)] }, element.name));
-            });
-            // option
-            pipeline.option.forEach(option => {
-               children.push(new Dependency(option, 'option', vscode.TreeItemCollapsibleState.None, undefined, undefined, element.name));
-            });
-            // arg
-            pipeline.arg.forEach(arg => {
-               children.push(new Dependency(arg, 'arg', vscode.TreeItemCollapsibleState.None, undefined, undefined, element.name));
             });
             // params
             if (pipeline.params) {
@@ -637,8 +674,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          if (pipelineArr) {
             let children = new Array<Dependency>();
             pipelineArr.forEach(name => {
-               const pipelineRes = this.nameToResourcesMap[name];
-               const contextValue = pipelineRes && pipelineRes.nextflow ? 'running' : 'stopped';
+               const pipelineRes = this.pipelineResources(name);
+               const contextValue = pipelineRes.nextflow ? 'running' : 'stopped';
                let dependency = new Dependency(name, contextValue, vscode.TreeItemCollapsibleState.Collapsed);
                children.push(dependency);
             });
@@ -681,4 +718,58 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
 
       return true;
    }
+
+   private watch(uri: vscode.Uri, options: { recursive: boolean; excludes: string[]; }): vscode.Disposable | undefined {
+      try {
+         const watcher = fs.watch(uri.fsPath, { recursive: options.recursive }, async (event: string, filename: string | Buffer) => {
+            if (event === 'change') {
+               const filepath = uri.fsPath;
+               const dirname = path.dirname(filepath);
+               const name = path.basename(dirname);
+               let pipeline = this.state.getPipeline(name);
+               if (pipeline) {
+                  const json = this.getFileAsJson(uri);
+                  pipeline.arg = json.args;
+                  pipeline.option = json.options;
+                  this.state.updatePipeline(pipeline);
+               }
+            }
+         });
+
+         return { dispose: () => watcher.close() };
+      } catch {
+      }
+  }
+
+   /**
+	 * Try to get a current document as json text.
+	 */
+	private getFileAsJson(file: vscode.Uri): any {
+		const text = fs.readFileSync(file.fsPath).toString();
+		if (text.trim().length === 0) {
+			return {};
+		}
+
+		try {
+			return JSON.parse(text);
+		} catch {
+			throw new Error('Could not get document as json. Content is not valid json');
+		}
+	}
+
+	/**
+	 * Write out the json to a given document.
+	 */
+	/*private updateTextFile(file: vscode.Uri, json: any) {
+		const edit = new vscode.WorkspaceEdit();
+
+		// Just replace the entire document every time for this example extension.
+		// A more complete extension should compute minimal edits instead.
+		edit.replace(
+			document.uri,
+			new vscode.Range(0, 0, document.lineCount, 0),
+			JSON.stringify(json, null, 2));
+		
+		return vscode.workspace.applyEdit(edit);
+	}*/
 }

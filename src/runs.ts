@@ -209,7 +209,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
       if (this.pathExists(fsPath)) {
          const deps = await this.fileSystemProvider.readDirectory(vscode.Uri.file(fsPath));
          for (let i = 0; i < deps.length; i++) {
-            if (deps[i][0] === '.nextflow') { // hide .nextflow folder
+            if (deps[i][0] === 'settings.json' || deps[i][0] === '.nextflow') { // hide settings.json and .nextflow folder
                continue;
             }
             const dep = new Dependency(deps[i][0], deps[i][1], pipeline, vscode.Uri.file(path.join(fsPath, deps[i][0])));

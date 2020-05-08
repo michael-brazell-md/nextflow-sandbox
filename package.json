@@ -82,14 +82,6 @@
             "title": "Add Config File..."
          },
          {
-            "command": "pipelines.addOption",
-            "title": "Add Option..."
-         },
-         {
-            "command": "pipelines.addArg",
-            "title": "Add Arg..."
-         },
-         {
             "command": "pipelines.setParams",
             "title": "Set Params File..."
          },
@@ -224,20 +216,10 @@
             {
                "command": "pipelines.setScript",
                "when": "view == pipelines && viewItem == stopped",
-               "group": "pipeline.c"
+               "group": "pipeline.d"
             },
             {
                "command": "pipelines.addConfig",
-               "when": "view == pipelines && viewItem == stopped",
-               "group": "pipeline.d"
-            },
-            {
-               "command": "pipelines.addOption",
-               "when": "view == pipelines && viewItem == stopped",
-               "group": "pipeline.d"
-            },
-            {
-               "command": "pipelines.addArg",
                "when": "view == pipelines && viewItem == stopped",
                "group": "pipeline.d"
             },

@@ -65,14 +65,6 @@ export class NfSandbox {
          this.pipelinesTreeDataProvider.addConfig(dependency.name);
       });
 
-      this.registerCommand(context, 'pipelines.addOption', async (dependency: pipelines.Dependency) => {
-         this.pipelinesTreeDataProvider.addOption(dependency.name);
-      });
-
-      this.registerCommand(context, 'pipelines.addArg', async (dependency: pipelines.Dependency) => {
-         this.pipelinesTreeDataProvider.addArg(dependency.name);
-      });
-
       this.registerCommand(context, 'pipelines.setParams', async (dependency: pipelines.Dependency) => {
          this.pipelinesTreeDataProvider.setParams(dependency.name);
       });
