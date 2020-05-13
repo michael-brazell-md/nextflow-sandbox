@@ -206,18 +206,22 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
 
    private async getDepTree(fsPath: string, pipeline: pipelines.Pipeline): Promise<Dependency[]> {
       let result = new Array<Dependency>();
-      if (this.pathExists(fsPath)) {
-         const deps = await this.fileSystemProvider.readDirectory(vscode.Uri.file(fsPath));
-         for (let i = 0; i < deps.length; i++) {
-            if (deps[i][0] === 'settings.json' || deps[i][0] === '.nextflow') { // hide settings.json and .nextflow folder
-               continue;
-            }
-            const dep = new Dependency(deps[i][0], deps[i][1], pipeline, vscode.Uri.file(path.join(fsPath, deps[i][0])));
-            result.push(dep);
-            if (dep.type === vscode.FileType.Directory) {
-               dep.children = await this.getDepTree(path.join(fsPath, dep.name), pipeline);
+      try {
+         if (this.pathExists(fsPath)) {
+            const deps = await this.fileSystemProvider.readDirectory(vscode.Uri.file(fsPath));
+            for (let i = 0; i < deps.length; i++) {
+               if (deps[i][0] === 'settings.json' || deps[i][0] === '.nextflow') { // hide settings.json and .nextflow folder
+                  continue;
+               }
+               const dep = new Dependency(deps[i][0], deps[i][1], pipeline, vscode.Uri.file(path.join(fsPath, deps[i][0])));
+               result.push(dep);
+               if (dep.type === vscode.FileType.Directory) {
+                  dep.children = await this.getDepTree(path.join(fsPath, dep.name), pipeline);
+               }
             }
          }
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
       }
       return Promise.resolve(result);
    }
@@ -225,69 +229,77 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
    // this is invoked for each top-level run folder 
    private decorateRunDepTree(root: Dependency): Dependency {
       let decorated = new Dependency(root.name, vscode.FileType.Directory, root.pipeline, root.resourceUri);
-      // decorate work folders
-      let workFolders = new Array<Dependency>();
-      let nonWorkFolders = new Array<Dependency>();
-      root.children.forEach(child => {
-         if (child.isWorkFolder()) {
-            workFolders.push(this.decorateWorkDepTree(child));
-         } else {
-            // don't include work folders in-waiting (useless info)
-            if (!child.isDirectory()) {
-               nonWorkFolders.push(child);
-            }
-         }
-      });
-      // setup process name aliases for tree view process-folder tree-entries (collapse work subfolders into work folder for ease of access)
-      workFolders.forEach(workFolder => {
-         workFolder.children.forEach(child => {
-            if (child.isWorkSubfolder()) {
-               //let collapsed = new Dependency(child.name, vscode.FileType.Directory, child.resourceUri);
-               if (workFolder.resourceUri && child.resourceUri) {
-                  let collapsed = new Dependency(child.name, vscode.FileType.Directory, child.pipeline, child.resourceUri);
-                  collapsed.description = '[' + path.basename(workFolder.resourceUri?.fsPath) + '/' + path.basename(child.resourceUri.fsPath).substr(0, 6) + '] ' + (child.description || '');
-                  collapsed.exitcode = child.exitcode;
-                  collapsed.children = child.children;
-                  decorated.children.push(collapsed);
-               }
-               //collapsed.children = child.children;
-               //decorated.children.push(collapsed);
+      try {
+         // decorate work folders
+         let workFolders = new Array<Dependency>();
+         let nonWorkFolders = new Array<Dependency>();
+         root.children.forEach(child => {
+            if (child.isWorkFolder()) {
+               workFolders.push(this.decorateWorkDepTree(child));
             } else {
-               //let uncollapsed = new Dependency(workFolder.name, vscode.FileType.Directory, workFolder.resourceUri);
-               //uncollapsed.children.push(child);
-               //decorated.children.push(uncollapsed);
+               // don't include work folders in-waiting (useless info)
+               if (!child.isDirectory()) {
+                  nonWorkFolders.push(child);
+               }
             }
          });
-      });
-      // group by process name
-      decorated.children = this.groupByProcName(decorated.children);
-      // concatenate work/nonWork folders
-      decorated.children = decorated.children.concat(nonWorkFolders);
-      //if (nonWorkFolders.length) {
-      //   let uncategorized = new Dependency(".uncategorized", vscode.FileType.Directory, undefined, undefined, vscode.TreeItemCollapsibleState.Collapsed);
-      //   uncategorized.children = nonWorkFolders;
-      //   decorated.children = decorated.children.concat(uncategorized);
-      //}
-      // sort
-      decorated.children.sort((a, b) => {
-         if (a.type === b.type) {
-            return a.name.localeCompare(b.name);
-         }
-         return a.isDirectory() ? -1 : 1;
-      });
+         // setup process name aliases for tree view process-folder tree-entries (collapse work subfolders into work folder for ease of access)
+         workFolders.forEach(workFolder => {
+            workFolder.children.forEach(child => {
+               if (child.isWorkSubfolder()) {
+                  //let collapsed = new Dependency(child.name, vscode.FileType.Directory, child.resourceUri);
+                  if (workFolder.resourceUri && child.resourceUri) {
+                     let collapsed = new Dependency(child.name, vscode.FileType.Directory, child.pipeline, child.resourceUri);
+                     collapsed.description = '[' + path.basename(workFolder.resourceUri?.fsPath) + '/' + path.basename(child.resourceUri.fsPath).substr(0, 6) + '] ' + (child.description || '');
+                     collapsed.exitcode = child.exitcode;
+                     collapsed.children = child.children;
+                     decorated.children.push(collapsed);
+                  }
+                  //collapsed.children = child.children;
+                  //decorated.children.push(collapsed);
+               } else {
+                  //let uncollapsed = new Dependency(workFolder.name, vscode.FileType.Directory, workFolder.resourceUri);
+                  //uncollapsed.children.push(child);
+                  //decorated.children.push(uncollapsed);
+               }
+            });
+         });
+         // group by process name
+         decorated.children = this.groupByProcName(decorated.children);
+         // concatenate work/nonWork folders
+         decorated.children = decorated.children.concat(nonWorkFolders);
+         //if (nonWorkFolders.length) {
+         //   let uncategorized = new Dependency(".uncategorized", vscode.FileType.Directory, undefined, undefined, vscode.TreeItemCollapsibleState.Collapsed);
+         //   uncategorized.children = nonWorkFolders;
+         //   decorated.children = decorated.children.concat(uncategorized);
+         //}
+         // sort
+         decorated.children.sort((a, b) => {
+            if (a.type === b.type) {
+               return a.name.localeCompare(b.name);
+            }
+            return a.isDirectory() ? -1 : 1;
+         });
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
+      }
       return decorated;
    }
 
    // this is invoked for each top-level work folder
    private decorateWorkDepTree(root: Dependency): Dependency {
       let decorated = new Dependency(root.name, vscode.FileType.Directory, root.pipeline, root.resourceUri);
-      root.children.forEach(child => {
-         if (child.isWorkSubfolder()) {
-            decorated.children.push(this.decorateProcDepTree(child));
-         } else {
-            decorated.children.push(child);
-         }
-      });
+      try {
+         root.children.forEach(child => {
+            if (child.isWorkSubfolder()) {
+               decorated.children.push(this.decorateProcDepTree(child));
+            } else {
+               decorated.children.push(child);
+            }
+         });
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
+      }
       return decorated;
    }
 
@@ -326,7 +338,9 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
                      } 
                   }
                }
-            } catch (err) {}
+            } catch (err) {
+               vscode.window.showErrorMessage(err.toString());
+            }
             decorated.children.push(child);
          }
       });
@@ -335,52 +349,56 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
 
    private groupByProcName(folders: Array<Dependency>): Array<Dependency> {
       let result = new Array<Dependency>();
-      let procToDepsMap: Map<string, Array<Dependency>> = new Map<string, Array<Dependency>>();
-      folders.forEach(folder => {
-         if (folder.name.endsWith(')')) {
-            const proc = folder.name.substring(0, folder.name.lastIndexOf('(')-1);
-            if (procToDepsMap.get(proc) === undefined) {
-               procToDepsMap.set(proc, new Array<Dependency>());
-            }
-            procToDepsMap.get(proc)?.push(folder);
-         } else {
-            result.push(folder);
-         }
-      });
-      procToDepsMap.forEach((dependencies: Array<Dependency>, proc: string) => {
-         // count number of successes/failures
-         let successCount = 0;
-         let failureCount = 0;
-         dependencies.forEach(dependency => {
-            // TODO: refactor!!
-            if (dependency.resourceUri) {
-               const stats = fs.statSync(dependency.resourceUri.fsPath);
-               // only count successes/failures for dependencies in this run (accounts for resume)
-               if (dependency.pipeline && stats.mtimeMs >= dependency.pipeline.mtimeMs) {
-                  if (dependency.exitcode === 0 ||
-                      dependency.exitcode === 143) { // killed by NF
-                     successCount++;
-                  } else if (dependency.exitcode !== undefined) {
-                     failureCount++;
-                  }
-               //} else {
-                  // count previous run dependencies as successes for success logic below
-               //   successCount++;
+      try {
+         let procToDepsMap: Map<string, Array<Dependency>> = new Map<string, Array<Dependency>>();
+         folders.forEach(folder => {
+            if (folder.name.endsWith(')')) {
+               const proc = folder.name.substring(0, folder.name.lastIndexOf('(')-1);
+               if (procToDepsMap.get(proc) === undefined) {
+                  procToDepsMap.set(proc, new Array<Dependency>());
                }
+               procToDepsMap.get(proc)?.push(folder);
+            } else {
+               result.push(folder);
             }
          });
-         let description = undefined;
-         if (failureCount > 0) {
-            description = '❌';
-         } else if (successCount === dependencies.length) {
-            //description = '✅';
-         } else {
-            //proc += ' ❔';
-         }
-         let dependency = new Dependency(proc, vscode.FileType.Directory, dependencies[0].pipeline, undefined, description, vscode.TreeItemCollapsibleState.Expanded); // TODO: does uri need to be set for context menu
-         dependency.children = dependencies;
-         result.push(dependency);
-      });
+         procToDepsMap.forEach((dependencies: Array<Dependency>, proc: string) => {
+            // count number of successes/failures
+            let successCount = 0;
+            let failureCount = 0;
+            dependencies.forEach(dependency => {
+               // TODO: refactor!!
+               if (dependency.resourceUri) {
+                  const stats = fs.statSync(dependency.resourceUri.fsPath);
+                  // only count successes/failures for dependencies in this run (accounts for resume)
+                  if (dependency.pipeline && stats.mtimeMs >= dependency.pipeline.mtimeMs) {
+                     if (dependency.exitcode === 0 ||
+                         dependency.exitcode === 143) { // killed by NF
+                        successCount++;
+                     } else if (dependency.exitcode !== undefined) {
+                        failureCount++;
+                     }
+                  //} else {
+                     // count previous run dependencies as successes for success logic below
+                  //   successCount++;
+                  }
+               }
+            });
+            let description = undefined;
+            if (failureCount > 0) {
+               description = '❌';
+            } else if (successCount === dependencies.length) {
+               //description = '✅';
+            } else {
+               //proc += ' ❔';
+            }
+            let dependency = new Dependency(proc, vscode.FileType.Directory, dependencies[0].pipeline, undefined, description, vscode.TreeItemCollapsibleState.Expanded); // TODO: does uri need to be set for context menu
+            dependency.children = dependencies;
+            result.push(dependency);
+         });
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
+      }
       return result;
    }
 
@@ -401,10 +419,14 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
    }
 
    openInTerminal(uri: vscode.Uri) {
-      const terminal = vscode.window.createTerminal('Nextflow Sandbox');
-      const fsPath = uri.fsPath;
-      terminal.sendText('cd "' + fsPath + '"');
-      terminal.show();
+      try {
+         const terminal = vscode.window.createTerminal('Nextflow Sandbox');
+         const fsPath = uri.fsPath;
+         terminal.sendText('cd "' + fsPath + '"');
+         terminal.show();
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
+      }
    }
 
    debug() {
@@ -474,7 +496,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
             terminal.sendText(docker, true);
          });
       } catch(err) {
-         vscode.window.showWarningMessage('Something went wrong; failed to launch container');
+         vscode.window.showWarningMessage('Something went wrong; failed to launch container: ' + err.toString());
       }
    }
 

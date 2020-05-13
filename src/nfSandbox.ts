@@ -58,93 +58,165 @@ export class NfSandbox {
    private registerCommands(context: vscode.ExtensionContext) {
       // pipelines 
       this.registerCommand(context, 'pipelines.add', async () => {
-         this.pipelinesTreeDataProvider.add();
+         try {
+            this.pipelinesTreeDataProvider.add();
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.addConfig', async (dependency: pipelines.Dependency) => {
-         this.pipelinesTreeDataProvider.addConfig(dependency.name);
+         try {
+            this.pipelinesTreeDataProvider.addConfig(dependency.name);
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.setParams', async (dependency: pipelines.Dependency) => {
-         this.pipelinesTreeDataProvider.setParams(dependency.name);
+         try {
+            this.pipelinesTreeDataProvider.setParams(dependency.name);
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.setScript', async (dependency: pipelines.Dependency) => {
-         this.pipelinesTreeDataProvider.setScript(dependency.name);
+         try {
+            this.pipelinesTreeDataProvider.setScript(dependency.name);
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.refresh', (args: any) => {
-         this.pipelinesTreeDataProvider.refresh();
+         try {
+            this.pipelinesTreeDataProvider.refresh();
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.run', (dependency: pipelines.Dependency) => {
-         // save modified workspace files before running
-         vscode.workspace.saveAll(false).then( onfullfilled => {
-            this.pipelinesTreeDataProvider.run(dependency.name);
-            this.runsTreeDataProvider.refresh(dependency.name);
-         });
+         try {
+            // save modified workspace files before running
+            vscode.workspace.saveAll(false).then( onfullfilled => {
+               this.pipelinesTreeDataProvider.run(dependency.name);
+               this.runsTreeDataProvider.refresh(dependency.name);
+            });
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.resume', (dependency: pipelines.Dependency) => {
-         // save modified workspace files before running
-         vscode.workspace.saveAll(false).then( onfullfilled => {
-            this.pipelinesTreeDataProvider.run(dependency.name, true);
-            this.runsTreeDataProvider.refresh(dependency.name);
-         });
+         try {
+            // save modified workspace files before running
+            vscode.workspace.saveAll(false).then( onfullfilled => {
+               this.pipelinesTreeDataProvider.run(dependency.name, true);
+               this.runsTreeDataProvider.refresh(dependency.name);
+            });
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.stop', (dependency: pipelines.Dependency) => {
-         this.pipelinesTreeDataProvider.stop(dependency.name);
-         this.runsTreeDataProvider.refresh(dependency.name);
+         try {
+            this.pipelinesTreeDataProvider.stop(dependency.name);
+            this.runsTreeDataProvider.refresh(dependency.name);
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.config', (dependency: pipelines.Dependency) => {
-         this.pipelinesTreeDataProvider.config(dependency.name);
-         this.runsTreeDataProvider.refresh(dependency.name);
+         try {
+            this.pipelinesTreeDataProvider.config(dependency.name);
+            this.runsTreeDataProvider.refresh(dependency.name);
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.remove', async (dependency: pipelines.Dependency) => {
-         const removed = await this.pipelinesTreeDataProvider.rem(dependency.name);
-         if (removed) {
+         try {
+            const removed = await this.pipelinesTreeDataProvider.rem(dependency.name);
+            if (removed) {
+            }
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
          }
       });
 
       this.registerCommand(context, 'pipelines.removeDep', (dependency: pipelines.Dependency) => {
-         const removed = this.pipelinesTreeDataProvider.remDep(dependency);
+         try {
+            const removed = this.pipelinesTreeDataProvider.remDep(dependency);
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.moveConfigUp', (dependency: pipelines.Dependency) => {
-         this.pipelinesTreeDataProvider.moveUp(dependency);
+         try {
+            this.pipelinesTreeDataProvider.moveUp(dependency);
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.moveConfigDown', (dependency: pipelines.Dependency) => {
-         this.pipelinesTreeDataProvider.moveDown(dependency);
+         try {
+            this.pipelinesTreeDataProvider.moveDown(dependency);
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'pipelines.openFile', (resource: vscode.Uri) => {
-         vscode.window.showTextDocument(resource);
+         try {
+            vscode.window.showTextDocument(resource);
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       // runs
       this.registerCommand(context, 'runs.showFile', (resource: vscode.Uri, resources: Array<vscode.Uri>) => {
-         vscode.window.showTextDocument(resource); // TODO: multi
+         try {
+            vscode.window.showTextDocument(resource); // TODO: multi
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'runs.openFile', (resource: runs.Dependency, resources: Array<vscode.Uri>) => {
-         if (resource.resourceUri) {
-            cp.spawn('open', [resource.resourceUri.fsPath]); // TODO: multi
+         try {
+            if (resource.resourceUri) {
+               cp.spawn('open', [resource.resourceUri.fsPath]); // TODO: multi
+            }
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
          }
       });
 
       this.registerCommand(context, 'runs.revealInFinder', (resource: runs.Dependency, resources: Array<runs.Dependency>) => {
-         if (resource.resourceUri) {
-            cp.spawn('open', [resource.resourceUri.path]); // TODO: multi
+         try {
+            if (resource.resourceUri) {
+               cp.spawn('open', [resource.resourceUri.path]); // TODO: multi
+            }
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
          }
       });
 
       this.registerCommand(context, 'runs.openInTerminal', (resource: runs.Dependency, resources: Array<runs.Dependency>) => {
-         if (resource.resourceUri) {
-            this.runsTreeDataProvider.openInTerminal(resource.resourceUri);
+         try {
+            if (resource.resourceUri) {
+               this.runsTreeDataProvider.openInTerminal(resource.resourceUri);
+            }
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -164,27 +236,45 @@ export class NfSandbox {
                   this.runsTreeDataProvider.refresh();
                });
             }
-         } catch (err) {}
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'runs.refresh', (args: any) => {
-         this.runsTreeDataProvider.refresh();
+         try {
+            this.runsTreeDataProvider.refresh();
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'runs.toggleDecorated', (args: any) => {
-         this.runsTreeDataProvider.toggleDecorated();
+         try {
+            this.runsTreeDataProvider.toggleDecorated();
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
       });
 
       this.registerCommand(context, 'runs.launchContainer', (resource: runs.Dependency) => {
-         if (resource.resourceUri) {
-            this.runsTreeDataProvider.launchContainer(resource.resourceUri);
+         try {
+            if (resource.resourceUri) {
+               this.runsTreeDataProvider.launchContainer(resource.resourceUri);
+            }
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
          }
       });
    }
    
    private registerCommand(context: vscode.ExtensionContext, command: string, callback: (...args: any[]) => any, thisArg?: any) {
-      let disposable = vscode.commands.registerCommand(command, callback);
-      context.subscriptions.push(disposable);
+      try {
+         let disposable = vscode.commands.registerCommand(command, callback);
+         context.subscriptions.push(disposable);
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
+      }
    }
 
    private onDidChangePipelinesSelection(selection: pipelines.Dependency[]) {
