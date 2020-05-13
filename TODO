@@ -1,6 +1,14 @@
 
 TODO ---------------------------------------------------------------------
 
+Add run timer to running pipeline context description
+
+Make icons look better (refresh has white border, NF Sandbox main icon is off-center); ensure light/dark both look correct
+
+Document
+
+Package/Post
+
 Keep last run/pipeline folder expanded config between activates (store in state)
 
 Name (?)
@@ -44,3 +52,5 @@ Debug docker context menu
    - lanches docker container with work folder mapped (see .command.run docker run command) and attaches visual studio if possible
 
 Added settings.json for args/options
+
+Fixed: when running to quickly after modifying settings, args/options may be undefined - need to synchronize

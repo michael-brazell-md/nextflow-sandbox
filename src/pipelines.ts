@@ -66,7 +66,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                private state: State,
                private on: (event: string, pipeline: string) => void | undefined) {
       // watch settings.json for changes
-      let pipelineArr = this.state.getPipelines();
+      /*let pipelineArr = this.state.getPipelines();
       if (pipelineArr) {
          let children = new Array<Dependency>();
          pipelineArr.forEach(name => {
@@ -75,7 +75,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                this.watch(vscode.Uri.file(path.join(pipeline.storagePath.fsPath, name, 'settings.json')), { recursive: false, excludes: [] });
             }
          });
-      }
+      }*/
    }
 
    private pipelineResources(name: string): PipelineResources {
@@ -136,9 +136,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             if (success) {
                document.save().then(success => {
                   if (success) {
-                     // watch for changes (doesn't work)
-                     const watcher = this.watch(document.uri, { recursive: false, excludes: [] });
-                     const pause = true;
+                     // watch for changes
+                     //const watcher = this.watch(document.uri, { recursive: false, excludes: [] });
                   }
                });
             } else {
@@ -380,23 +379,30 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          }
       }
 
+      // parse settings.json
+      this.parseSettingsJson(name);
+
       // setup params
       let params: string[] = [];
       pipeline.config.forEach(config => {
          params.push('-c');
          params.push('"' + config.path + '"');
       });
-      pipeline.option.forEach(option => {
-         const tokens = option.split(' ');
-         params = params.concat(tokens);
-      });
+      if (pipeline.option) {
+         pipeline.option.forEach(option => {
+            const tokens = option.split(' ');
+            params = params.concat(tokens);
+         });
+      }
       params.push('-log');
       params.push('"' + workFolder + '/.nextflow.log"');
       params.push('run');
-      pipeline.arg.forEach(arg => {
-         const tokens = arg.split(' ');
-         params = params.concat(tokens);
-      });
+      if (pipeline.arg) {
+         pipeline.arg.forEach(arg => {
+            const tokens = arg.split(' ');
+            params = params.concat(tokens);
+         });
+      }
       if (pipeline.params) {
          params.push('-params-file');
          params.push('"' + pipeline.params.path + '"');
@@ -513,6 +519,9 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       if (pipelineRes.nextflow !== undefined) {
          return;
       }
+
+      // parse settings.json
+      this.parseSettingsJson(name);
 
       // setup params
       let params: string[] = [];
@@ -719,7 +728,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       return true;
    }
 
-   private watch(uri: vscode.Uri, options: { recursive: boolean; excludes: string[]; }): vscode.Disposable | undefined {
+   /*private watch(uri: vscode.Uri, options: { recursive: boolean; excludes: string[]; }): vscode.Disposable | undefined {
       try {
          const watcher = fs.watch(uri.fsPath, { recursive: options.recursive }, async (event: string, filename: string | Buffer) => {
             if (event === 'change') {
@@ -739,7 +748,20 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          return { dispose: () => watcher.close() };
       } catch {
       }
-  }
+   }*/
+
+   private parseSettingsJson(name: string) {
+      const pipeline = this.state.getPipeline(name);
+      if (pipeline) {
+         try {
+            const uri = vscode.Uri.file(path.join(pipeline.storagePath.fsPath, name, 'settings.json'));
+            const json = this.getFileAsJson(uri);
+            pipeline.arg = json.args;
+            pipeline.option = json.options;
+            this.state.updatePipeline(pipeline);
+         } catch(err) {}
+      }
+   }
 
    /**
 	 * Try to get a current document as json text.
