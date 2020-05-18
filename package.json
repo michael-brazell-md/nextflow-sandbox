@@ -207,7 +207,7 @@
             {
                "command": "pipelines.resume",
                "when": "view == pipelines && viewItem == stopped",
-               "group": "pipeline.a"
+               "group": "pipeline.b"
             },
             {
                "command": "pipelines.stop",
@@ -217,7 +217,7 @@
             {
                "command": "pipelines.config",
                "when": "view == pipelines && viewItem == stopped",
-               "group": "pipeline.b"
+               "group": "pipeline.c"
             },
             {
                "command": "pipelines.setScript",

@@ -388,21 +388,17 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             params.push('-c');
             params.push('"' + config.path + '"');
          });
-         if (pipeline.option) {
-            pipeline.option.forEach(option => {
-               const tokens = option.split(' ');
-               params = params.concat(tokens);
-            });
-         }
+         pipeline.option.forEach(option => {
+            const tokens = option.split(' ');
+            params = params.concat(tokens);
+         });
          params.push('-log');
          params.push('"' + workFolder + '/.nextflow.log"');
          params.push('run');
-         if (pipeline.arg) {
-            let args = '--args "';
-            pipeline.arg.forEach(arg => {
-               args += ' ';
-               args += arg;
-            });
+         if (pipeline.arg.length > 0) {
+            params.push('--args');
+            let args = '"';
+            args += pipeline.arg.join(' ');
             args += '"';
             params = params.concat(args);
          }
