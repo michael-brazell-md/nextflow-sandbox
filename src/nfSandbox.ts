@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as cp from 'child_process';
 import { runInThisContext } from 'vm';
-import { pipeline } from 'stream';
+import { pipeline, PassThrough } from 'stream';
 import { State } from './state';
 
 export class NfSandbox {
@@ -222,20 +222,20 @@ export class NfSandbox {
 
       this.registerCommand(context, 'runs.delete', (resource: runs.Dependency, resources: Array<runs.Dependency>) => {
          try {
+            let options = new Array<string>('-r');
             if (resources) {
                for (let i = 0; i < resources.length; i++) {
                   const resourceI = resources[i];
                   if (resourceI.resourceUri) {
-                     cp.spawn('rm', ['-r', resourceI.resourceUri.path]).on('close', () => {
-                        this.runsTreeDataProvider.refresh();
-                     });
+                     options = options.concat(resourceI.resourceUri.fsPath);
                   }
                }
             } else if (resource.resourceUri) {
-               cp.spawn('rm', ['-r', resource.resourceUri.path]).on('close', () => {
-                  this.runsTreeDataProvider.refresh();
-               });
+               options = options.concat(resource.resourceUri.fsPath);
             }
+            cp.spawn('rm', options).on('close', () => {
+               this.runsTreeDataProvider.refresh();
+            });
          } catch (err) {
             vscode.window.showErrorMessage(err.toString());
          }

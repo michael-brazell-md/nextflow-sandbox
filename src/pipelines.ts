@@ -327,9 +327,18 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             try {
                const runName = this.parseRunName(name);
                if (runName) {
-                  let mv = cp.spawnSync('mv', ['-f', workFolder, path.join(pipelineFolder, 'archive', runName)]);
-                  if (mv.status !== 0) {
-                     vscode.window.showWarningMessage('Failed to move current run folder to archive');
+                  const archivePrevRun = this.state.getConfigurationPropertyAsBoolean('archivePreviousRun', true);
+                  if (archivePrevRun) {
+                     let mv = cp.spawnSync('mv', ['-f', workFolder, path.join(pipelineFolder, 'archive', runName)]);
+                     if (mv.status !== 0) {
+                        vscode.window.showWarningMessage('Failed to move current run folder to archive');
+                     }
+                  }
+                  else {
+                     let rm = cp.spawnSync('rm', ['-fr', workFolder, path.join(pipelineFolder, 'run')]);
+                     if (rm.status !== 0) {
+                        vscode.window.showWarningMessage('Failed to remove current run folder');
+                     }
                   }
                } else { // !runName (couldn't determine run name or no current run)
                   //vscode.window.showWarningMessage();
@@ -389,10 +398,13 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          params.push('"' + workFolder + '/.nextflow.log"');
          params.push('run');
          if (pipeline.arg) {
+            let args = '--args "';
             pipeline.arg.forEach(arg => {
-               const tokens = arg.split(' ');
-               params = params.concat(tokens);
+               args += ' ';
+               args += arg;
             });
+            args += '"';
+            params = params.concat(args);
          }
          if (pipeline.params) {
             params.push('-params-file');
