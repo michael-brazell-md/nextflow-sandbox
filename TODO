@@ -1,6 +1,8 @@
 
 TODO ---------------------------------------------------------------------
 
+Add context menu to set local storage path
+
 Add run timer to running pipeline context description
 
 Make icons look better (refresh has white border, NF Sandbox main icon is off-center); ensure light/dark both look correct

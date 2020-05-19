@@ -1,65 +1,44 @@
-# nextflow-sandbox README
+# Nextflow Sandbox Extension for Visual Studio Code
 
-This is the README for your extension "nextflow-sandbox". After writing up a brief description, we recommend including the following sections.
+This extension provides a convenient tree view and ease-of-use utilities for managing, configuring, running, and debugging Nextflow pipelines.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+* Quickly create new pipelines which reference existing Nextflow scripts, configurations, and parameter files
+   
+* Specify the storage folder location for the work folders and files created by Nextflow runs
 
-For example if there is an image subfolder under your extension project workspace:
+* Set options and arguments for the Nextflow command-line
 
-\!\[feature X\]\(images/feature-x.png\)
+* Execute Nextflow Run, Resume, or Config with one click (versus typing the command into a terminal)
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+* Automatically group and decorate work folders using human-readable process names instead of the cryptic 
+hexidecimal process identifiers
+
+* Open work folders in a terminal or reveal them in the finder with one click
+
+* Launch docker container with process work folder mapped with one click (for processes utilizing docker)
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+[Nextflow](https://www.nextflow.io/)
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
 This extension contributes the following settings:
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+* `nextflow-sandbox.executablePath`: path to the Nextflow executable
+* `nextflow-sandbox.storagePath`: default path where Nextflow will store local work
+* `nextflow-sandbox.autoShowLog`: automatically show log upon Nextflow exit
+* `nextflow-sandbox.archivePreviousRun`: archive previous run work folders before running
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+None.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
 ### 1.0.0
 
-Initial release of ...
+Initial release of Nextflow Sandbox
 
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
