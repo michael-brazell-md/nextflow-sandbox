@@ -34,7 +34,7 @@ This extension contributes the following settings:
 
 ## Known Issues
 
-None.
+None
 
 ## Release Notes
 
