@@ -39,5 +39,9 @@ None
 
 ### 0.0.1
 
-Initial release of Nextflow Sandbox
+Initial release of Nextflow Sandbox.
+
+### 0.0.2
+
+Removed unnecessary quotes around command-line parameters.
 
