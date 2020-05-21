@@ -398,7 +398,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          params.push('run');
          if (pipeline.arg.length > 0) {
             params.push('--args');
-            const args = pipeline.arg.join(' ');
+            const args = '"' + pipeline.arg.join(' ') + '"';
             params = params.concat(args);
          }
          if (pipeline.params) {
