@@ -18,6 +18,7 @@ export class Pipeline {
                public config: Array<vscode.Uri> = new Array<vscode.Uri>(),
                public option: Array<string> = new Array<string>(),
                public arg: Array<string> = new Array<string>(),
+               public profile?: string,
                public params?: vscode.Uri,
                public script?: vscode.Uri) {
    }
@@ -125,7 +126,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          const settings = vscode.Uri.parse('untitled:' + path.join(pipelineFolder, 'settings.json'));
          vscode.workspace.openTextDocument(settings).then(document => {
             const edit = new vscode.WorkspaceEdit();
-            edit.insert(settings, new vscode.Position(0, 0), '{\n   "args": [\n   ],\n   "options": [\n   ]\n}');
+            edit.insert(settings, new vscode.Position(0, 0), '{\n   "args": [\n   ],\n   "options": [\n   ],\n   "profile": ""\n}');
             vscode.workspace.applyEdit(edit).then(success => {
                if (success) {
                   document.save().then(success => {
@@ -406,6 +407,10 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             params.push('-params-file');
             params.push('"' + pipeline.params.path + '"');
          }
+         if (pipeline.profile) {
+            params.push('-profile');
+            params.push(pipeline.profile);
+         }
          params.push('-w');
          params.push('"' + workFolder + '"');
          params.push('-with-report');
@@ -541,6 +546,10 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             params = params.concat(tokens);
          });
          params.push('config');
+         if (pipeline.profile) {
+            params.push('-profile');
+            params.push(pipeline.profile);
+         }
          params.push('"' + pipeline.script.path + '"');
 
          // get path to nextflow exe from settings
@@ -752,6 +761,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             const json = this.getFileAsJson(uri);
             pipeline.arg = json.args || new Array<string>();
             pipeline.option = json.options || new Array<string>();
+            pipeline.profile = json.profile;
             this.state.updatePipeline(pipeline);
          }
       } catch (err) {
