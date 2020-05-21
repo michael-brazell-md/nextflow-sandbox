@@ -10,7 +10,7 @@
       "name": "Michael Brazell",
       "email": "mbrazell@mechdyne.com"
    },
-   "version": "0.0.2",
+   "version": "0.0.3",
    "engines": {
       "vscode": "^1.41.0"
    },

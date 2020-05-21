@@ -45,3 +45,7 @@ Initial release of Nextflow Sandbox.
 
 Removed unnecessary quotes around command-line parameters.
 
+### 0.0.3
+
+Restored quotes around arguments passed with --args for multiple argument specification.
+
