@@ -3,6 +3,9 @@ TODO ---------------------------------------------------------------------
 
 Add context menu to set local storage path
 
+Debug python context menu
+   - copies .command.sh into .command.py and launches debug
+
 Add run timer to running pipeline context description
 
 Make icons look better (refresh has white border, NF Sandbox main icon is off-center); ensure light/dark both look correct
@@ -21,9 +24,6 @@ Name (?)
    - Next-level Nextflow
    - I Heart Nextflow
    - Nextflow for Humans
-
-Debug python context menu
-   - copies .command.sh into .command.py and launches debug
 
 Duplicate - pipelines context
 

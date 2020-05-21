@@ -1,6 +1,6 @@
 # Nextflow Sandbox Extension for Visual Studio Code
 
-This extension provides a convenient tree view and ease-of-use utilities for managing, configuring, running, and debugging Nextflow pipelines.
+This extension provides convenient tree views and ease-of-use utilities for managing, configuring, running, and debugging Nextflow pipelines.
 
 ## Features
 
@@ -12,8 +12,7 @@ This extension provides a convenient tree view and ease-of-use utilities for man
 
 * Execute Nextflow Run, Resume, or Config with one click (versus typing the command into a terminal)
 
-* Automatically group and decorate work folders using human-readable process names instead of the cryptic 
-hexidecimal process identifiers
+* Automatically group and decorate work folders using human-readable process names instead of cryptic hexidecimal process identifiers
 
 * Open work folders in a terminal or reveal them in the finder with one click
 
@@ -28,7 +27,7 @@ hexidecimal process identifiers
 This extension contributes the following settings:
 
 * `nextflow-sandbox.executablePath`: path to the Nextflow executable
-* `nextflow-sandbox.storagePath`: default path where Nextflow will store local work
+* `nextflow-sandbox.storagePath`: path where Nextflow will store local work
 * `nextflow-sandbox.autoShowLog`: automatically show log upon Nextflow exit
 * `nextflow-sandbox.archivePreviousRun`: archive previous run work folders before running
 
@@ -38,7 +37,7 @@ None
 
 ## Release Notes
 
-### 1.0.0
+### 0.0.1
 
 Initial release of Nextflow Sandbox
 
