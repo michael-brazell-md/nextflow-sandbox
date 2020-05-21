@@ -387,38 +387,36 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          let params: string[] = [];
          pipeline.config.forEach(config => {
             params.push('-c');
-            params.push('"' + config.path + '"');
+            params.push(config.path);
          });
          pipeline.option.forEach(option => {
             const tokens = option.split(' ');
             params = params.concat(tokens);
          });
          params.push('-log');
-         params.push('"' + workFolder + '/.nextflow.log"');
+         params.push(workFolder + '/.nextflow.log');
          params.push('run');
          if (pipeline.arg.length > 0) {
             params.push('--args');
-            let args = '"';
-            args += pipeline.arg.join(' ');
-            args += '"';
+            const args = pipeline.arg.join(' ');
             params = params.concat(args);
          }
          if (pipeline.params) {
             params.push('-params-file');
-            params.push('"' + pipeline.params.path + '"');
+            params.push(pipeline.params.path);
          }
          if (pipeline.profile) {
             params.push('-profile');
             params.push(pipeline.profile);
          }
          params.push('-w');
-         params.push('"' + workFolder + '"');
+         params.push(workFolder);
          params.push('-with-report');
-         params.push('"' + workFolder + '/report.htm"');
+         params.push(workFolder + '/report.htm');
          if (resume) {
             params.push('-resume');
          }
-         params.push('"' + pipeline.script.path + '"');
+         params.push(pipeline.script.path);
 
          // get path to nextflow exe from settings
          const nextflowPath = this.state.getConfigurationPropertyAsString('executablePath', 'nextflow');
@@ -539,7 +537,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          let params: string[] = [];
          pipeline.config.forEach(config => {
             params.push('-c');
-            params.push('"' + config.path + '"');
+            params.push(config.path);
          });
          pipeline.option.forEach(option => {
             const tokens = option.split(' ');
@@ -550,7 +548,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             params.push('-profile');
             params.push(pipeline.profile);
          }
-         params.push('"' + pipeline.script.path + '"');
+         params.push(pipeline.script.path);
 
          // get path to nextflow exe from settings
          const nextflowPath = this.state.getConfigurationPropertyAsString('executablePath', 'nextflow');
