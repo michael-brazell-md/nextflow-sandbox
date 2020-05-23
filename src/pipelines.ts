@@ -396,9 +396,6 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          params.push('-log');
          params.push(workFolder + '/.nextflow.log');
          params.push('run');
-         if (pipeline.arg.length > 0) {
-            params.push('--args=' + pipeline.arg.join(' '));
-         }
          if (pipeline.params) {
             params.push('-params-file');
             params.push(pipeline.params.path);
@@ -411,10 +408,14 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          params.push(workFolder);
          params.push('-with-report');
          params.push(workFolder + '/report.htm');
+         params.push(pipeline.script.path);
+         if (pipeline.arg.length > 0) {
+            params.push('--args');
+            params.push(pipeline.arg.join(' ').replace(' ', '\xa0'));
+         }
          if (resume) {
             params.push('-resume');
          }
-         params.push(pipeline.script.path);
 
          // get path to nextflow exe from settings
          const nextflowPath = this.state.getConfigurationPropertyAsString('executablePath', 'nextflow');
