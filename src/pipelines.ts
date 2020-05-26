@@ -87,7 +87,19 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          }
 
          // get path to nextflow storage from settings
-         const storagePath = vscode.Uri.file((this.state.getConfigurationPropertyAsString('storagePath', '~/nextflow-sandbox')));
+         let storagePath = vscode.Uri.file((this.state.getConfigurationPropertyAsString('storagePath', '~/nextflow-sandbox')));
+
+         // prompt user for different path to nextflow storage (if desired)
+         let selection = await vscode.window.showInformationMessage('"' + storagePath.path + '" will be used for the pipeline storage path', 'OK', 'Select Different Path' ,'Cancel');
+         if (selection === 'Select Different Path') {
+            const altStoragePath = await vscode.window.showOpenDialog({ canSelectFolders: true, canSelectFiles: false, canSelectMany: false, openLabel: 'Select Storage Path' });
+            if (!altStoragePath) {
+               return;
+            }
+            storagePath = altStoragePath[0];
+         } else if (selection === 'Cancel') {
+            return;
+         }
 
          // make pipeline work root directory (remove existing first if requested)
          const pipelineFolder = storagePath.fsPath + '/' + name;
