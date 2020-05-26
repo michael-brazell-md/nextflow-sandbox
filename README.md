@@ -37,6 +37,14 @@ None
 
 ## Release Notes
 
+I created this extension for my personal use, as my daily activities generally include running one or more Nextflow pipelines, and I wanted to automate the features that I exercise most.
+
+As an isolated user, the use-cases I have added support for are clearly limited to my personal experience using Nextflow.  If you find this extension useful, I am very interested in receiving feedback, including any issues encountered with its use, as well as features not implemented that would be useful to you.  I am happy to update this extension so that everyone may benefit.
+
+If you would like to [report](https://github.com/michael-brazell-md/nextflow-sandbox/issues) a bug or feature request, please do so on the github [repository](https://github.com/michael-brazell-md/nextflow-sandbox) for this project.  I will make every effort to respond in a timely manner.
+
+Thank you!
+
 ### 0.0.1
 
 Initial release of Nextflow Sandbox.
@@ -44,3 +52,7 @@ Initial release of Nextflow Sandbox.
 ### 0.0.2
 
 Removed unnecessary quotes around the '--args' parameter.
+
+### 0.0.3
+
+Added optional selection of the pipeline storage path when creating a new pipeline.
