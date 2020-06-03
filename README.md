@@ -56,3 +56,7 @@ Removed unnecessary quotes around the '--args' parameter.
 ### 0.0.3
 
 Added optional selection of the pipeline storage path when creating a new pipeline.
+
+### 0.0.4
+
+Fixed issue caused by singular args value.
