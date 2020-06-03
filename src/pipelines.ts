@@ -422,8 +422,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          params.push(workFolder + '/report.htm');
          params.push(pipeline.script.path);
          if (pipeline.arg.length > 0) {
-            params.push('--args');
-            params.push(pipeline.arg.join(' ').replace(' ', '\xa0'));
+            params.push('--args=' + pipeline.arg.join(' ').replace(' ', '\xa0'));
          }
          if (resume) {
             params.push('-resume');
