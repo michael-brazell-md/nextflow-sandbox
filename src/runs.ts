@@ -460,6 +460,8 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          let params: string[] = [];
          params.push('run');
          params.push('-it');
+         params.push('-p');
+         params.push('8005:8005');
          for (let i = 0; i < commandTokens.length-1; i++) {
             switch (commandTokens[i]) {
                case '-v':

@@ -58,3 +58,7 @@ Added optional selection of the pipeline storage path when creating a new pipeli
 ### 0.0.4
 
 Fixed issue caused by singular args value.
+
+### 0.0.5
+
+Added port mapping to Launch Container when launching docker container, to support java remote debugging.
