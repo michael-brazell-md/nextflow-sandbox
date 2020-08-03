@@ -50,7 +50,7 @@ export class Dependency extends vscode.TreeItem {
    }
 
    get description(): string | undefined {
-      if (this.contextValue === 'running' || this.contextValue === 'stopped') {
+      if (this.contextValue === 'running') {
          return '[' + this.contextValue + ']';
       }
       return undefined;
