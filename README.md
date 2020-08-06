@@ -66,3 +66,7 @@ Added port mapping to Launch Container when launching docker container, to suppo
 ### 0.0.6
 
 Removed "stopped" description on pipelines; now only displays "running" when running.
+
+### 0.0.7
+
+Added support for project repositories.

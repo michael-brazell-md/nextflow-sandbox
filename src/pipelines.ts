@@ -9,6 +9,12 @@ import { State } from './state';
 import { Pipe } from 'stream';
 import { getVSCodeDownloadUrl } from 'vscode-test/out/util';
 
+class Repository {
+
+   constructor(public readonly url: string, public readonly hub?: string, public readonly tag?: string) {
+   }
+}
+
 export class Pipeline {
 
    public mtimeMs: number = 0;
@@ -20,7 +26,8 @@ export class Pipeline {
                public arg: Array<string> = new Array<string>(),
                public profile?: string,
                public params?: vscode.Uri,
-               public script?: vscode.Uri) {
+               public script?: vscode.Uri,
+               public repo?: Repository) {
    }
 }
 
@@ -138,7 +145,19 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          const settings = vscode.Uri.parse('untitled:' + path.join(pipelineFolder, 'settings.json'));
          vscode.workspace.openTextDocument(settings).then(document => {
             const edit = new vscode.WorkspaceEdit();
-            edit.insert(settings, new vscode.Position(0, 0), '{\n   "args": [\n   ],\n   "options": [\n   ],\n   "profile": ""\n}');
+            edit.insert(settings, new vscode.Position(0, 0), 
+'{\n\
+   "repository": {\n\
+      "url": "",\n\
+      "hub": "",\n\
+      "tag": ""\n\
+    },\n\
+    "args": [\n\
+    ],\n\
+    "options": [\n\
+    ],\n\
+    "profile": ""\n\
+ }');
             vscode.workspace.applyEdit(edit).then(success => {
                if (success) {
                   document.save().then(success => {
@@ -309,8 +328,12 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             vscode.window.showErrorMessage('Pipeline not found: ' + name);
             return;
          }
-         if (pipeline.script === undefined) {
-            vscode.window.showErrorMessage('Script must be defined');
+
+         // parse settings.json
+         this.parseSettingsJson(name);
+
+         if (pipeline.script === undefined && pipeline.repo === undefined) {
+            vscode.window.showErrorMessage('Script or repository must be defined');
             return;
          }
 
@@ -373,8 +396,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          if (!pipeline) {
             return;
          }
-         if (pipeline.script === undefined) {
-            vscode.window.showErrorMessage('Script must be defined');
+         if (pipeline.script === undefined && pipeline.repo === undefined) {
             return;
          }
          const pipelineFolder = path.join(pipeline.storagePath.fsPath, pipeline.name);
@@ -392,41 +414,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             }
          }
 
-         // parse settings.json
-         this.parseSettingsJson(name);
-
          // setup params
-         let params: string[] = [];
-         pipeline.config.forEach(config => {
-            params.push('-c');
-            params.push(config.path);
-         });
-         pipeline.option.forEach(option => {
-            const tokens = option.split(' ');
-            params = params.concat(tokens);
-         });
-         params.push('-log');
-         params.push(workFolder + '/.nextflow.log');
-         params.push('run');
-         if (pipeline.params) {
-            params.push('-params-file');
-            params.push(pipeline.params.path);
-         }
-         if (pipeline.profile) {
-            params.push('-profile');
-            params.push(pipeline.profile);
-         }
-         params.push('-w');
-         params.push(workFolder);
-         params.push('-with-report');
-         params.push(workFolder + '/report.htm');
-         params.push(pipeline.script.path);
-         if (pipeline.arg.length > 0) {
-            params.push('--args=' + pipeline.arg.join(' ').replace(' ', '\xa0'));
-         }
-         if (resume) {
-            params.push('-resume');
-         }
+         const params = this.setupRunParams(pipeline, workFolder, resume);
 
          // get path to nextflow exe from settings
          const nextflowPath = this.state.getConfigurationPropertyAsString('executablePath', 'nextflow');
@@ -507,6 +496,58 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       }
    }
 
+   setupRunParams(pipeline: Pipeline, workFolder: string, resume: boolean) : string[] {
+      let params: string[] = [];
+      try {
+         pipeline.option.forEach(option => {
+            const tokens = option.split(' ');
+            params = params.concat(tokens);
+         });
+         params.push('-log');
+         params.push(workFolder + '/.nextflow.log');
+         params.push('run');
+         if (pipeline.repo) {
+            params.push(pipeline.repo.url);
+            if (pipeline.repo.hub) {
+               params.push('-hub');
+               params.push(pipeline.repo.hub);
+            }
+            if (pipeline.repo.tag) {
+               params.push('-r');
+               params.push(pipeline.repo.tag);
+            }
+         }
+         pipeline.config.forEach(config => {
+            params.push('-c');
+            params.push(config.path);
+         });
+         if (pipeline.params) {
+            params.push('-params-file');
+            params.push(pipeline.params.path);
+         }
+         if (pipeline.profile) {
+            params.push('-profile');
+            params.push(pipeline.profile);
+         }
+         params.push('-w');
+         params.push(workFolder);
+         params.push('-with-report');
+         params.push(workFolder + '/report.htm');
+         if (!pipeline.repo && pipeline.script) { // repo trumps script
+            params.push(pipeline.script.path);
+         }
+         if (pipeline.arg.length > 0) {
+            params.push('--args=' + pipeline.arg.join(' ').replace(' ', '\xa0'));
+         }
+         if (resume) {
+            params.push('-resume');
+         }
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
+      }
+      return params;
+   }
+
    stop(name: string) {
       try {
          const pipelineRes = this.nameToResourcesMap[name];
@@ -529,8 +570,12 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          if (!pipeline) {
             return;
          }
-         if (pipeline.script === undefined) {
-            vscode.window.showErrorMessage('Script must be defined');
+
+         // parse settings.json
+         this.parseSettingsJson(name);
+
+         if (pipeline.script === undefined && pipeline.repo === undefined) {
+            vscode.window.showErrorMessage('Script or repository must be defined');
             return;
          }
          const pipelineFolder = path.join(pipeline.storagePath.fsPath, pipeline.name);
@@ -540,25 +585,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             return;
          }
 
-         // parse settings.json
-         this.parseSettingsJson(name);
-
          // setup params
-         let params: string[] = [];
-         pipeline.config.forEach(config => {
-            params.push('-c');
-            params.push(config.path);
-         });
-         pipeline.option.forEach(option => {
-            const tokens = option.split(' ');
-            params = params.concat(tokens);
-         });
-         params.push('config');
-         if (pipeline.profile) {
-            params.push('-profile');
-            params.push(pipeline.profile);
-         }
-         params.push(pipeline.script.path);
+         const params = this.setupConfigParams(pipeline);
 
          // get path to nextflow exe from settings
          const nextflowPath = this.state.getConfigurationPropertyAsString('executablePath', 'nextflow');
@@ -613,6 +641,34 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       } catch (err) {
          vscode.window.showErrorMessage(err.toString());
       }
+   }
+
+   setupConfigParams(pipeline: Pipeline): string[] {
+      let params: string[] = [];
+      try {
+         pipeline.option.forEach(option => {
+            const tokens = option.split(' ');
+            params = params.concat(tokens);
+         });
+         params.push('config');
+         if (pipeline.repo) {
+            params.push(pipeline.repo.url);
+         }
+         pipeline.config.forEach(config => {
+            params.push('-c');
+            params.push(config.path);
+         });
+         if (pipeline.profile) {
+            params.push('-profile');
+            params.push(pipeline.profile);
+         }
+         if (!pipeline.repo && pipeline.script) { // repo trumps script
+            params.push(pipeline.script.path);
+         }
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
+      }
+      return params;
    }
 
    moveUp(dependency: Dependency): boolean {
@@ -770,6 +826,12 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             pipeline.arg = json.args || new Array<string>();
             pipeline.option = json.options || new Array<string>();
             pipeline.profile = json.profile;
+            let repo = undefined;
+            const repository = json.repository;
+            if (repository.url) {
+               repo = new Repository(repository.url, repository.hub, repository.tag);
+            }
+            pipeline.repo = repo;
             this.state.updatePipeline(pipeline);
          }
       } catch (err) {
