@@ -70,3 +70,7 @@ Removed "stopped" description on pipelines; now only displays "running" when run
 ### 0.0.7
 
 Added support for project repositories.
+
+### 0.0.8
+
+Added "pull" Nextflow command support.

@@ -321,6 +321,110 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       return false;
    }
 
+   async pull(name: string) {
+      try {
+         let pipeline = this.state.getPipeline(name);
+         if (!pipeline) {
+            vscode.window.showErrorMessage('Pipeline not found: ' + name);
+            return;
+         }
+
+         // parse settings.json
+         this.parseSettingsJson(name);
+
+         if (pipeline.repo === undefined) {
+            vscode.window.showErrorMessage('Repository must be defined');
+            return;
+         }
+
+         const pipelineRes = this.pipelineResources(name);
+         if (pipelineRes.nextflow !== undefined) {
+            return;
+         }
+
+         // setup params
+         const params = this.setupPullParams(pipeline);
+
+         // get path to nextflow exe from settings
+         const nextflowPath = this.state.getConfigurationPropertyAsString('executablePath', 'nextflow');
+
+         // formulate command
+         let command = nextflowPath;
+         params.forEach(param => {
+            command += ' ' + param;
+         });
+         command += '\r\n';
+
+         // clear/show output
+         pipelineRes.outputCh.clear();
+         pipelineRes.outputCh.show();
+
+         // output command being executed
+         pipelineRes.outputCh.append(command);
+
+         // spawn
+         const nf = cp.spawn(nextflowPath, params);
+
+         pipelineRes.nextflow = nf;
+         this.refresh();
+
+         // invoke started event cb
+         //this.on('started', name);
+
+         // stdout cb
+         nf.stdout.on('data', (data) => {
+            // invoke updated event cb
+            //this.on('updated', name);
+            pipelineRes.outputCh.append(data.toString());
+         });
+
+         // stderr cb
+         nf.stderr.on('data', (data) => {
+            // invoke updated event cb
+            //this.on('updated', name);
+            pipelineRes.outputCh.append(data.toString());
+         });
+
+         // close cb
+         nf.on('close', async (code) => {
+            pipelineRes.nextflow = undefined;
+            this.refresh();
+            // invoke stopped event cb
+            //this.on('stopped', name);
+            let selection = (code === 0 ? 
+               await vscode.window.showInformationMessage('Nextflow process exited with code: ' + code.toString(), 'OK') :
+               await vscode.window.showWarningMessage('Nextflow process exited with code: ' + code.toString()), 'OK');
+         });
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
+      }
+   }
+
+   setupPullParams(pipeline: Pipeline): string[] {
+      let params: string[] = [];
+      try {
+         pipeline.option.forEach(option => {
+            const tokens = option.split(' ');
+            params = params.concat(tokens);
+         });
+         params.push('pull');
+         if (pipeline.repo) {
+            params.push(pipeline.repo.url);
+            if (pipeline.repo.hub) {
+               params.push('-hub');
+               params.push(pipeline.repo.hub);
+            }
+            if (pipeline.repo.tag) {
+               params.push('-r');
+               params.push(pipeline.repo.tag);
+            }
+         }
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
+      }
+      return params;
+   }
+
    async run(name: string, resume?: boolean | false) {
       try {
          let pipeline = this.state.getPipeline(name);

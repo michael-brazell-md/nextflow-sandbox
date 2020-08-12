@@ -139,6 +139,15 @@ export class NfSandbox {
          }
       });
 
+      this.registerCommand(context, 'pipelines.pull', (dependency: pipelines.Dependency) => {
+         try {
+            this.pipelinesTreeDataProvider.pull(dependency.name);
+            this.runsTreeDataProvider.refresh(dependency.name);
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
+      });
+
       this.registerCommand(context, 'pipelines.remove', async (dependency: pipelines.Dependency) => {
          try {
             const removed = await this.pipelinesTreeDataProvider.rem(dependency.name);

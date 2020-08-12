@@ -10,7 +10,7 @@
       "name": "Michael Brazell",
       "email": "mbrazell@mechdyne.com"
    },
-   "version": "0.0.7",
+   "version": "0.0.8",
    "engines": {
       "vscode": "^1.41.0"
    },
@@ -131,6 +131,10 @@
             "title": "Config"
          },
          {
+            "command": "pipelines.pull",
+            "title": "Pull"
+         },
+         {
             "command": "pipelines.remove",
             "title": "Delete"
          },
@@ -227,19 +231,24 @@
                "group": "pipeline.c"
             },
             {
-               "command": "pipelines.setScript",
+               "command": "pipelines.pull",
                "when": "view == pipelines && viewItem == stopped",
                "group": "pipeline.d"
+            },
+            {
+               "command": "pipelines.setScript",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.g"
             },
             {
                "command": "pipelines.addConfig",
                "when": "view == pipelines && viewItem == stopped",
-               "group": "pipeline.d"
+               "group": "pipeline.g"
             },
             {
                "command": "pipelines.setParams",
                "when": "view == pipelines && viewItem == stopped",
-               "group": "pipeline.d"
+               "group": "pipeline.g"
             },
             {
                "command": "pipelines.remove",
