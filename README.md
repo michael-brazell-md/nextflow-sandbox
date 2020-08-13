@@ -4,13 +4,13 @@ This extension provides convenient tree views and ease-of-use utilities for mana
 
 ## Features
 
-* Quickly create new pipelines which reference existing Nextflow scripts, configurations, and parameter files
+* Quickly create new pipelines which reference existing Nextflow repositories, scripts, configurations, and parameter files
    
 * Specify the storage folder location for the work folders and files created by Nextflow runs
 
 * Set options and arguments for the Nextflow command-line
 
-* Execute Nextflow Run, Resume, or Config with one click (versus typing the command into a terminal)
+* Execute Nextflow Run, Resume, Config, and Pull with one click (versus typing the command into a terminal)
 
 * Automatically group and decorate work folders using human-readable process names instead of cryptic hexidecimal process identifiers
 
@@ -74,3 +74,7 @@ Added support for project repositories.
 ### 0.0.8
 
 Added "pull" Nextflow command support.
+
+### 0.0.9
+
+Added extension icon.

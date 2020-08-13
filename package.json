@@ -10,7 +10,8 @@
       "name": "Michael Brazell",
       "email": "mbrazell@mechdyne.com"
    },
-   "version": "0.0.8",
+   "icon": "media/nextflow-icon-128x128.png",
+   "version": "0.0.9",
    "engines": {
       "vscode": "^1.41.0"
    },
