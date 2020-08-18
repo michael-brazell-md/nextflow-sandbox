@@ -449,11 +449,15 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          const endIndex = contents.indexOf(' -c ', index);
          let command = contents.substring(startIndex, endIndex);
 
-         // replace occurrences of '$PWD' with the uri path
-         command = command.replace(/\"\$PWD\"/g, uri.fsPath);
+         // replace occurrences of $PWD with the uri path (replace spaces in uri path with '?' to keep from splitting the path)
+         command = command.replace(/\$PWD/g, uri.fsPath.replace(' ', '?'));
 
          // split command into tokens
-         const commandTokens = command.split(' ');
+         let commandTokens = command.split(' ');
+         // replace any occurrence of '?' with a space ('?' used as placeholder for spaces in paths, to keep from splitting the path)
+         for (let i = 0; i < commandTokens.length; i++) {
+            commandTokens[i] = commandTokens[i].replace(/\?/g, ' ');
+         }
          const containerName = commandTokens[commandTokens.length-1];
 
          // setup docker run params

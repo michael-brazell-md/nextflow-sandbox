@@ -78,3 +78,7 @@ Added "pull" Nextflow command support.
 ### 0.0.9
 
 Added extension icon.
+
+### 0.0.10
+
+Added support for launching a container with 1+ spaces within the path.
