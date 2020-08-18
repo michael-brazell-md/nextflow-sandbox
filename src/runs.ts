@@ -452,6 +452,16 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          // replace occurrences of $PWD with the uri path (replace spaces in uri path with '?' to keep from splitting the path)
          command = command.replace(/\$PWD/g, uri.fsPath.replace(/ /g, '?'));
 
+         // replace any escaped character(s)
+         // from: https://stackoverflow.com/questions/9932957/how-can-i-remove-a-character-from-a-string-using-javascript
+         /*let escaped = command.indexOf('\\');
+         do {
+            let tmp = command.split(''); // convert to an array
+            tmp.splice(escaped, 1); // remove 1 element from the array
+            command = tmp.join(''); // convert back to string
+            escaped = command.indexOf('\\');
+         } while (escaped >= 0);*/
+
          // split command into tokens
          let commandTokens = command.split(' ');
          // replace any occurrence of '?' with a space ('?' used as placeholder for spaces in paths, to keep from splitting the path)

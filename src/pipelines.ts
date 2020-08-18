@@ -88,10 +88,13 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
    async add() {
       try {
          // get name
-         const name = await vscode.window.showInputBox({ prompt: 'Enter pipeline name.' });
-         if (!name) {
+         const input = await vscode.window.showInputBox({ prompt: 'Enter pipeline name.' });
+         if (!input) {
             return;
          }
+
+         // replace any spaces with '_' to avoid pathing issues when launching container
+         const name = input.replace(/ /g, '_');
 
          // get path to nextflow storage from settings
          let storagePath = vscode.Uri.file((this.state.getConfigurationPropertyAsString('storagePath', '~/nextflow-sandbox')));
