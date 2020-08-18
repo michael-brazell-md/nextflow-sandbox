@@ -81,4 +81,8 @@ Added extension icon.
 
 ### 0.1.0
 
-Added support for launching a container with 1+ spaces within the path.
+Added support for launching a container with 1+ spaces within the pipeline path.
+
+### 0.1.1
+
+Fixed issue caused by multiple spaces within the pipeline path when launching a container.

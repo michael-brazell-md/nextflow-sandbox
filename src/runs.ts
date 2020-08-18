@@ -450,7 +450,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          let command = contents.substring(startIndex, endIndex);
 
          // replace occurrences of $PWD with the uri path (replace spaces in uri path with '?' to keep from splitting the path)
-         command = command.replace(/\$PWD/g, uri.fsPath.replace(' ', '?'));
+         command = command.replace(/\$PWD/g, uri.fsPath.replace(/ /g, '?'));
 
          // split command into tokens
          let commandTokens = command.split(' ');
