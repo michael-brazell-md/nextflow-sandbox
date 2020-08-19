@@ -452,15 +452,21 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          // replace occurrences of $PWD with the uri path (replace spaces in uri path with '?' to keep from splitting the path)
          command = command.replace(/\$PWD/g, uri.fsPath.replace(/ /g, '?'));
 
-         // replace any escaped character(s)
-         // from: https://stackoverflow.com/questions/9932957/how-can-i-remove-a-character-from-a-string-using-javascript
-         /*let escaped = command.indexOf('\\');
-         do {
-            let tmp = command.split(''); // convert to an array
-            tmp.splice(escaped, 1); // remove 1 element from the array
-            command = tmp.join(''); // convert back to string
-            escaped = command.indexOf('\\');
-         } while (escaped >= 0);*/
+         // replace any escaped spaces with '?' to keep from splitting the path
+         let escaped = command.indexOf('\\');
+         if (escaped >= 0) {
+            do {
+               let tmp = command.split(''); // convert to an array
+               tmp.splice(escaped, 1); // remove 1 element from the array
+               if (tmp[escaped] === ' ') {
+                  do {
+                     tmp[escaped++] = '?';
+                  } while (tmp[escaped] === ' ');
+               }
+               command = tmp.join(''); // convert back to string
+               escaped = command.indexOf('\\');
+            } while(escaped >= 0);
+         }
 
          // split command into tokens
          let commandTokens = command.split(' ');
@@ -479,18 +485,23 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          for (let i = 0; i < commandTokens.length-1; i++) {
             switch (commandTokens[i]) {
                case '-v':
+               case '-w':
                   // don't repeat volume maps
                   if (params.indexOf(commandTokens[i+1]) < 0) {
-                     params.push(commandTokens[i]); i++;
-                     params.push(commandTokens[i]);
+                     params.push(commandTokens[i++]);
+                     // add quotes (if not present) to handle paths w/ spaces
+                     if (commandTokens[i][0] !== '"') {
+                        params.push('"' + commandTokens[i] + '"');
+                     } else {
+                        params.push(commandTokens[i]);
+                     }
                   } else {
                      // volume already mapped
                      i++;
                   }
                   break;
-               case '-w':
                case '--entrypoint':
-                  params.push(commandTokens[i]); i++;
+                  params.push(commandTokens[i++]);
                   params.push(commandTokens[i]);
                   break;
             }

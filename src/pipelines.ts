@@ -94,7 +94,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          }
 
          // replace any spaces with '_' to avoid pathing issues when launching container
-         const name = input.replace(/ /g, '_');
+         //const name = input.replace(/ /g, '_');
+         const name = input;
 
          // get path to nextflow storage from settings
          let storagePath = vscode.Uri.file((this.state.getConfigurationPropertyAsString('storagePath', '~/nextflow-sandbox')));

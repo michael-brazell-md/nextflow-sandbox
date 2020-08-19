@@ -89,4 +89,8 @@ Fixed issue caused by multiple spaces within the pipeline path when launching a 
 
 ### 0.1.2
 
-Found an issue with escaped characters in the Nextflow container run command when launching a container from a pipeline with spaces in its name; opted to replace spaces with underscores when creating a pipeline to bypass the issue altogether; may revisit at a later date. 
+Found an issue with escaped characters in the Nextflow container run command when launching a container from a pipeline with spaces in its name; opted to replace spaces with underscores when creating a pipeline to bypass the issue altogether; may revisit at a later date.
+
+### 0.1.3
+
+Now handles escaped characters in the Nextflow container run command when launching a container from a pipeline with spaces in its name.
