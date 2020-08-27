@@ -94,3 +94,9 @@ Found an issue with escaped characters in the Nextflow container run command whe
 ### 0.1.3
 
 Now handles escaped characters in the Nextflow container run command when launching a container from a pipeline with spaces in its name.
+
+### 0.1.4
+
+Resolved an issue caused by incorrect placement of the configuration file option (-c) when executing the Nextflow config command.
+
+Removed automatic port mapping with Launch Container when launching docker container, as it would fail if the port was already in use.

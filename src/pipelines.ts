@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as fe from './fileExplorer';
 import * as mkdirp from 'mkdirp';
 import * as cp from 'child_process';
 import { Script } from 'vm';
@@ -114,7 +115,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
 
          // make pipeline work root directory (remove existing first if requested)
          const pipelineFolder = storagePath.fsPath + '/' + name;
-         if (this.pathExists(pipelineFolder)) {
+         if (fe.pathExists(pipelineFolder)) {
             let selection = await vscode.window.showWarningMessage('Pipeline "' + name + '" already exists at the specified storage path.  Would you like to replace it?', 'Yes, Replace', 'Cancel');
             if (selection === 'Yes, Replace') {
                try {
@@ -145,37 +146,11 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             return;
          }
 
-         // make settings.json
-         const settings = vscode.Uri.parse('untitled:' + path.join(pipelineFolder, 'settings.json'));
-         vscode.workspace.openTextDocument(settings).then(document => {
-            const edit = new vscode.WorkspaceEdit();
-            edit.insert(settings, new vscode.Position(0, 0), 
-'{\n\
-   "repository": {\n\
-      "url": "",\n\
-      "hub": "",\n\
-      "tag": ""\n\
-    },\n\
-    "args": [\n\
-    ],\n\
-    "options": [\n\
-    ],\n\
-    "profile": ""\n\
- }');
-            vscode.workspace.applyEdit(edit).then(success => {
-               if (success) {
-                  document.save().then(success => {
-                     if (success) {
-                        // watch for changes
-                        //const watcher = this.watch(document.uri, { recursive: false, excludes: [] });
-                     }
-                  });
-               } else {
-                  vscode.window.showErrorMessage("applyEdit failed");
-                  return;
-               }
-            });
-         });
+         // copy default settings.json from extension resources to pipeline folder
+         fs.copyFileSync(this.context.asAbsolutePath('resources/settings.json'), path.join(pipelineFolder, 'settings.json'));
+
+         // copy default tasks.json from extension resources to pipeline folder
+         //fs.copyFileSync(this.context.asAbsolutePath('resources/tasks.json'), path.join(pipelineFolder, 'tasks.json'));
 
          // create new Pipeline object
          let pipeline = new Pipeline(name, storagePath);
@@ -462,7 +437,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
 
          // check work folder exists if resuming
          if (resume) {
-            if (!this.pathExists(workFolder)) {
+            if (!fe.pathExists(workFolder)) {
                vscode.window.showWarningMessage('Pipeline cannot resume');
                return;
             }
@@ -514,7 +489,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             return;
          }
 
-         if (!resume && !this.pathExists(workFolder)) {
+         if (!resume && !fe.pathExists(workFolder)) {
             const made = mkdirp.sync(workFolder);
             if (made === null) {
                vscode.window.showErrorMessage("mkdirp.Made === null (Failed to create: " + workFolder + ")");
@@ -758,14 +733,14 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             const tokens = option.split(' ');
             params = params.concat(tokens);
          });
-         params.push('config');
-         if (pipeline.repo) {
-            params.push(pipeline.repo.url);
-         }
          pipeline.config.forEach(config => {
             params.push('-c');
             params.push(config.path);
          });
+         params.push('config');
+         if (pipeline.repo) {
+            params.push(pipeline.repo.url);
+         }
          if (pipeline.profile) {
             params.push('-profile');
             params.push(pipeline.profile);
@@ -862,6 +837,9 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                // settings.json
                const settingsPath = path.join(pipeline.storagePath.fsPath, pipeline.name, 'settings.json');
                children.push(new Dependency('settings.json', undefined, vscode.TreeItemCollapsibleState.None, vscode.Uri.file(settingsPath), { command: 'pipelines.openFile', title: "Open File", arguments: [vscode.Uri.file(settingsPath)] }, element.name));
+               // tasks.json
+               //const tasksPath = path.join(pipeline.storagePath.fsPath, pipeline.name, 'tasks.json');
+               //children.push(new Dependency('tasks.json', undefined, vscode.TreeItemCollapsibleState.None, vscode.Uri.file(tasksPath), { command: 'pipelines.openFile', title: "Open File", arguments: [vscode.Uri.file(tasksPath)] }, element.name));
                // script
                if (pipeline.script) {
                   children.push(new Dependency(path.basename(pipeline.script.path), 'script', vscode.TreeItemCollapsibleState.None, vscode.Uri.file(pipeline.script.path), { command: 'pipelines.openFile', title: "Open File", arguments: [vscode.Uri.file(pipeline.script.path)] }, element.name));
@@ -930,7 +908,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          const pipeline = this.state.getPipeline(name);
          if (pipeline) {
             const uri = vscode.Uri.file(path.join(pipeline.storagePath.fsPath, name, 'settings.json'));
-            const json = this.getFileAsJson(uri);
+            const json = fe.getFileAsJson(uri);
             pipeline.arg = json.args || new Array<string>();
             pipeline.option = json.options || new Array<string>();
             pipeline.profile = json.profile;
@@ -945,31 +923,6 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       } catch (err) {
          vscode.window.showErrorMessage(err.toString());
       }
-   }
-
-   /**
-    * Try to get a current document as json text.
-    */
-   private getFileAsJson(file: vscode.Uri): any {
-      try {
-         const text = fs.readFileSync(file.fsPath).toString();
-         if (text.trim().length === 0) {
-            return {};
-         }
-         return JSON.parse(text);
-      } catch (err) {
-         vscode.window.showErrorMessage(err.toString());
-      }
-   }
-
-   private pathExists(path: string): boolean {
-      try {
-         fs.accessSync(path);
-      } catch (err) {
-         return false;
-      }
-
-      return true;
    }
 
    /*private watch(uri: vscode.Uri, options: { recursive: boolean; excludes: string[]; }): vscode.Disposable | undefined {

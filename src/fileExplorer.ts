@@ -108,7 +108,29 @@ namespace _ {
 		return new Promise<void>((resolve, reject) => {
 			fs.unlink(path, error => handleResult(resolve, reject, error, void 0));
 		});
-	}
+   }
+}
+
+export function getFileAsJson(file: vscode.Uri): any {
+   try {
+      const text = fs.readFileSync(file.fsPath).toString();
+      if (text.trim().length === 0) {
+         return {};
+      }
+      return JSON.parse(text);
+   } catch (err) {
+      vscode.window.showErrorMessage(err.toString());
+   }
+}
+
+export function pathExists(path: string): boolean {
+   try {
+      fs.accessSync(path);
+   } catch (err) {
+      return false;
+   }
+
+   return true;
 }
 
 export class FileStat implements vscode.FileStat {
@@ -298,20 +320,5 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 			treeItem.contextValue = 'file';
 		}
 		return treeItem;
-	}
-}
-
-export class FileExplorer {
-
-	private fileExplorer: vscode.TreeView<Entry>;
-
-	constructor(context: vscode.ExtensionContext) {
-		const treeDataProvider = new FileSystemProvider();
-		this.fileExplorer = vscode.window.createTreeView('fileExplorer', { treeDataProvider });
-		vscode.commands.registerCommand('fileExplorer.openFile', (resource) => this.openResource(resource));
-	}
-
-	private openResource(resource: vscode.Uri): void {
-		vscode.window.showTextDocument(resource);
-	}
+   }
 }

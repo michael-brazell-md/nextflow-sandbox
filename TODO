@@ -1,6 +1,16 @@
 
 TODO ---------------------------------------------------------------------
 
+Remove auto port setting when launching container; instead, get options from tasks.json (?)
+
+Add Launch Container and Attach Visual Studio Code; adds work folder to workspace; opens terminal at work folder
+
+Add Gear button to open settings (Pipelines - one per pipeline)
+
+Instead of Run/Resume, just have Run, resume is set in settings.json
+
+Update log instead of appending (like docker build)
+
 Add context menu to set local storage path
 
 Debug python context menu

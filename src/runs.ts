@@ -210,7 +210,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          if (this.pathExists(fsPath)) {
             const deps = await this.fileSystemProvider.readDirectory(vscode.Uri.file(fsPath));
             for (let i = 0; i < deps.length; i++) {
-               if (deps[i][0] === 'settings.json' || deps[i][0] === '.nextflow') { // hide settings.json and .nextflow folder
+               if (deps[i][0] === 'settings.json' || deps[i][0] === 'tasks.json' || deps[i][0] === '.nextflow') { // hide settings.json, tasks.json, and .nextflow folder
                   continue;
                }
                const dep = new Dependency(deps[i][0], deps[i][1], pipeline, vscode.Uri.file(path.join(fsPath, deps[i][0])));
@@ -480,8 +480,6 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          let params: string[] = [];
          params.push('run');
          params.push('-it');
-         params.push('-p');
-         params.push('8005:8005');
          for (let i = 0; i < commandTokens.length-1; i++) {
             switch (commandTokens[i]) {
                case '-v':
