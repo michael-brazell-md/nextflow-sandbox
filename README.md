@@ -16,7 +16,7 @@ This extension provides convenient tree views and ease-of-use utilities for mana
 
 * Open work folders in a terminal or reveal them in the finder with one click
 
-* Launch docker container with process work folder mapped with one click (for processes utilizing docker)
+* Launch Docker container with process work folder mapped with one click (for processes utilizing Docker)
 
 ## Requirements
 
@@ -100,3 +100,9 @@ Now handles escaped characters in the Nextflow container run command when launch
 Resolved an issue caused by incorrect placement of the configuration file option (-c) when executing the Nextflow config command.
 
 Removed automatic port mapping with Launch Container when launching docker container, as it would fail if the port was already in use.
+
+### 0.1.5
+
+Resolved issue with command args.
+
+Removed "profile" configuration setting, as this may be set in the "args" configuration setting, and was therefore redundant.

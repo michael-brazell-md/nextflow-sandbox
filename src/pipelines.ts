@@ -25,7 +25,6 @@ export class Pipeline {
                public config: Array<vscode.Uri> = new Array<vscode.Uri>(),
                public option: Array<string> = new Array<string>(),
                public arg: Array<string> = new Array<string>(),
-               public profile?: string,
                public params?: vscode.Uri,
                public script?: vscode.Uri,
                public repo?: Repository) {
@@ -608,10 +607,6 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             params.push('-params-file');
             params.push(pipeline.params.path);
          }
-         if (pipeline.profile) {
-            params.push('-profile');
-            params.push(pipeline.profile);
-         }
          params.push('-w');
          params.push(workFolder);
          params.push('-with-report');
@@ -619,9 +614,10 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          if (!pipeline.repo && pipeline.script) { // repo trumps script
             params.push(pipeline.script.path);
          }
-         if (pipeline.arg.length > 0) {
-            params.push('--args=' + pipeline.arg.join(' ').replace(' ', '\xa0'));
-         }
+         pipeline.arg.forEach(arg => {
+            const tokens = arg.split(' ');
+            params = params.concat(tokens);
+         });
          if (resume) {
             params.push('-resume');
          }
@@ -741,13 +737,13 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          if (pipeline.repo) {
             params.push(pipeline.repo.url);
          }
-         if (pipeline.profile) {
-            params.push('-profile');
-            params.push(pipeline.profile);
-         }
          if (!pipeline.repo && pipeline.script) { // repo trumps script
             params.push(pipeline.script.path);
          }
+         pipeline.arg.forEach(arg => {
+            const tokens = arg.split(' ');
+            params = params.concat(tokens);
+         });
       } catch (err) {
          vscode.window.showErrorMessage(err.toString());
       }
@@ -911,7 +907,6 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             const json = fe.getFileAsJson(uri);
             pipeline.arg = json.args || new Array<string>();
             pipeline.option = json.options || new Array<string>();
-            pipeline.profile = json.profile;
             let repo = undefined;
             const repository = json.repository;
             if (repository.url) {
