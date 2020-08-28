@@ -109,18 +109,6 @@ export class NfSandbox {
          }
       });
 
-      this.registerCommand(context, 'pipelines.resume', (dependency: pipelines.Dependency) => {
-         try {
-            // save modified workspace files before running
-            vscode.workspace.saveAll(false).then( onfullfilled => {
-               this.pipelinesTreeDataProvider.run(dependency.name, true);
-               this.runsTreeDataProvider.refresh(dependency.name);
-            });
-         } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
-         }
-      });
-
       this.registerCommand(context, 'pipelines.stop', (dependency: pipelines.Dependency) => {
          try {
             this.pipelinesTreeDataProvider.stop(dependency.name);
