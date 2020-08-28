@@ -1,6 +1,8 @@
 
 TODO ---------------------------------------------------------------------
 
+If repo specified, add sym-links in Pipeline view to assets folder contents
+
 Remove auto port setting when launching container; instead, get options from tasks.json (?)
 
 Add Launch Container and Attach Visual Studio Code; adds work folder to workspace; opens terminal at work folder

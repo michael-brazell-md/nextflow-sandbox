@@ -106,3 +106,7 @@ Removed automatic port mapping with Launch Container when launching docker conta
 Resolved issue with command args.
 
 Removed "profile" configuration setting, as this may be set in the "args" configuration setting, and was therefore redundant.
+
+### 0.1.6
+
+Removed "Resume" context menu item for pipelines, as this may be set in the "args" configuration settings (-resume), and was therefore redundant.

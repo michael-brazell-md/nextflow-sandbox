@@ -11,7 +11,7 @@
       "email": "mbrazell@mechdyne.com"
    },
    "icon": "media/nextflow-icon-128x128.png",
-   "version": "0.1.5",
+   "version": "0.1.6",
    "engines": {
       "vscode": "^1.41.0"
    },
@@ -112,14 +112,6 @@
             }
          },
          {
-            "command": "pipelines.resume",
-            "title": "Resume",
-            "icon": {
-               "light": "resources/light/resume.svg",
-               "dark": "resources/dark/resume.svg"
-            }
-         },
-         {
             "command": "pipelines.stop",
             "title": "Stop",
             "icon": {
@@ -215,11 +207,6 @@
                "command": "pipelines.run",
                "when": "view == pipelines && viewItem == stopped",
                "group": "pipeline.a"
-            },
-            {
-               "command": "pipelines.resume",
-               "when": "view == pipelines && viewItem == stopped",
-               "group": "pipeline.b"
             },
             {
                "command": "pipelines.stop",

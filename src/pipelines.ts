@@ -440,7 +440,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                vscode.window.showWarningMessage('Pipeline cannot resume');
                return;
             }
-         } else { // !resume
+         } else if (!pipeline.arg.find(value => value === '-resume')) { // check that '-resume' not set in args
             // make run folder (move current run folder to archive first)
             try {
                const runName = this.parseRunName(name);
