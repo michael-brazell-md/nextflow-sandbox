@@ -1,6 +1,12 @@
 
 TODO ---------------------------------------------------------------------
 
+Remaking pipeline (deleting then making w/ same name) breaks output window (something with pipeline resources likely)
+
+USER Must include nextflow.config if other config is included on repo runs
+
+MAYBE Check valid args for command-type (e.g., "-resume" doesn't apply to config)
+
 If repo specified, add sym-links in Pipeline view to assets folder contents
 
 Remove auto port setting when launching container; instead, get options from tasks.json (?)
@@ -8,8 +14,6 @@ Remove auto port setting when launching container; instead, get options from tas
 Add Launch Container and Attach Visual Studio Code; adds work folder to workspace; opens terminal at work folder
 
 Add Gear button to open settings (Pipelines - one per pipeline)
-
-Instead of Run/Resume, just have Run, resume is set in settings.json
 
 Update log instead of appending (like docker build)
 
@@ -20,7 +24,7 @@ Debug python context menu
 
 Add run timer to running pipeline context description
 
-Make icons look better (refresh has white border, NF Sandbox main icon is off-center); ensure light/dark both look correct
+Make icons look better (refresh has white border, NF Sandbox main icon is off-center); ensure light/dark both look correct; check out: https://github.com/microsoft/vscode-codicons
 
 Document
 
@@ -67,4 +71,8 @@ Debug docker context menu
 
 Added settings.json for args/options
 
-Fixed: when running to quickly after modifying settings, args/options may be undefined - need to synchronize
+Fixed: when running too quickly after modifying settings, args/options may be undefined - need to synchronize
+
+Instead of Run/Resume, just have Run, resume is set in settings.json
+
+Don't do the run/archive folder thing, just do run_1... run_N and leave alone to allow for resume of any prior run

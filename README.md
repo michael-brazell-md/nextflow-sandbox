@@ -29,7 +29,6 @@ This extension contributes the following settings:
 * `nextflow-sandbox.executablePath`: path to the Nextflow executable
 * `nextflow-sandbox.storagePath`: path where Nextflow will store local work
 * `nextflow-sandbox.autoShowLog`: automatically show log upon Nextflow exit
-* `nextflow-sandbox.archivePreviousRun`: archive previous run work folders before running
 
 ## Known Issues
 
@@ -110,3 +109,7 @@ Removed "profile" configuration setting, as this may be set in the "args" config
 ### 0.1.6
 
 Removed "Resume" context menu item for pipelines, as this may be set in the "args" configuration settings (-resume), and was therefore redundant.
+
+### 0.1.7
+
+Removed notion of archiving previous runs, as this prevents resuming.

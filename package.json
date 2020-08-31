@@ -11,7 +11,7 @@
       "email": "mbrazell@mechdyne.com"
    },
    "icon": "media/nextflow-icon-128x128.png",
-   "version": "0.1.6",
+   "version": "0.1.7",
    "engines": {
       "vscode": "^1.41.0"
    },
@@ -44,12 +44,6 @@
                "description": "Automatically show log upon Nextflow exit",
                "default": true,
                "title": "Automatically Show Log Upon Nextflow exit"
-            },
-            "nextflow-sandbox.archivePreviousRun": {
-               "type": "boolean",
-               "description": "Archive previous run work folders before running",
-               "default": true,
-               "title": "Archive Previous Run Work Folders Before Running"
             }
          }
       },

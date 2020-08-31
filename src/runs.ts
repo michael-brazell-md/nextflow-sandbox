@@ -148,7 +148,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
                      if (!this.nameToDepTreeMap[pipeline.name] || (this.refreshName === pipeline.name) || (this.refreshName === undefined)) {
                         let pipelineDepTree = new Dependency(path.basename(pipelinePath), vscode.FileType.Directory, pipeline, vscode.Uri.file(pipelinePath));
                         pipelineDepTree.children = await this.getDepTree(pipelinePath, pipeline);
-                        const runFolderDep = pipelineDepTree.children.find((value) => { return value.name === 'run'; });
+                        const runFolderDep = pipelineDepTree.children.find((value) => { return value.name === 'run_' + pipeline.run; });
                         if (runFolderDep) {
                            runFolderDep.description = this.getRunName(pipeline) || '';
                         }
@@ -404,7 +404,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
 
    private getRunName(pipeline: pipelines.Pipeline): string | undefined {
       try {
-         const logPath = path.join(pipeline.storagePath.fsPath, pipeline.name, 'run', '.nextflow.log');
+         const logPath = path.join(pipeline.storagePath.fsPath, pipeline.name, 'run_' + pipeline.run, '.nextflow.log');
          const contents = fs.readFileSync(logPath).toString();
          const searchString = 'Run name: ';
          const index = contents.indexOf(searchString, 0);

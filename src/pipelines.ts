@@ -18,6 +18,7 @@ class Repository {
 
 export class Pipeline {
 
+   public run: number = 0;
    public mtimeMs: number = 0;
 
    constructor(public readonly name: string,
@@ -137,9 +138,9 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
 
    private doAdd(name: string, storagePath: vscode.Uri) {
       try {
-         // make pipeline folder (and archive folder)
+         // make pipeline folder
          const pipelineFolder = storagePath.fsPath + '/' + name;
-         const made = mkdirp.sync(pipelineFolder + '/archive');
+         const made = mkdirp.sync(pipelineFolder);
          if (made === null) {
             vscode.window.showErrorMessage("mkdirp.Made === null (" + pipelineFolder + ")");
             return;
@@ -413,66 +414,31 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
 
          // parse settings.json
          this.parseSettingsJson(name);
-
          if (pipeline.script === undefined && pipeline.repo === undefined) {
             vscode.window.showErrorMessage('Script or repository must be defined');
             return;
          }
 
-         const pipelineFolder = path.join(pipeline.storagePath.fsPath, pipeline.name);
-         const workFolder = pipelineFolder + '/run';
+         // check if resuming
+         const resume = pipeline.arg.find(value => value === '-resume') !== undefined;
 
-         // prompt
-         /*let selection = await vscode.window.showInformationMessage('"' + name + '" will run with configured options.  Would you like to edit the command-line before executing?', 'Run', 'Edit', 'Cancel');
-         if (selection === 'Edit') {
-            const edit = await vscode.window.showInputBox({ prompt: 'Edit nextflow command-line', value: command });
-            if (!edit) {
-               return;
-            }
-            command = edit.toString();
-         } else if (selection === 'Cancel') {
-            return;
-         }*/
-
-         // check work folder exists if resuming
-         if (resume) {
-            if (!fe.pathExists(workFolder)) {
-               vscode.window.showWarningMessage('Pipeline cannot resume');
-               return;
-            }
-         } else if (!pipeline.arg.find(value => value === '-resume')) { // check that '-resume' not set in args
-            // make run folder (move current run folder to archive first)
-            try {
-               const runName = this.parseRunName(name);
-               if (runName) {
-                  const archivePrevRun = this.state.getConfigurationPropertyAsBoolean('archivePreviousRun', true);
-                  if (archivePrevRun) {
-                     let mv = cp.spawnSync('mv', ['-f', workFolder, path.join(pipelineFolder, 'archive', runName)]);
-                     if (mv.status !== 0) {
-                        vscode.window.showWarningMessage('Failed to move current run folder to archive');
-                     }
-                  }
-                  else {
-                     let rm = cp.spawnSync('rm', ['-fr', workFolder, path.join(pipelineFolder, 'run')]);
-                     if (rm.status !== 0) {
-                        vscode.window.showWarningMessage('Failed to remove current run folder');
-                     }
-                  }
-               } else { // !runName (couldn't determine run name or no current run)
-                  //vscode.window.showWarningMessage();
-               }
-            } catch (err) {
-               vscode.window.showWarningMessage(err.toString());
-            }
+         // if not resuming, increment run number
+         if (!resume) {
+            pipeline.run++;
+            this.state.updatePipeline(pipeline);
          }
 
-         this.doRun(name, resume || false, workFolder);
+         // formulate work folder for this run
+         const pipelineFolder = path.join(pipeline.storagePath.fsPath, pipeline.name);
+         const workFolder = pipelineFolder + '/run_' + pipeline.run;
+
+         this.doRun(name, workFolder);
       } catch (err) {
          vscode.window.showErrorMessage(err.toString());
       }
    }
 
-   async doRun(name: string, resume: boolean, workFolder: string) {
+   async doRun(name: string, workFolder: string) {
       try {
          const pipeline = this.state.getPipeline(name);
          if (!pipeline) {
@@ -488,7 +454,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             return;
          }
 
-         if (!resume && !fe.pathExists(workFolder)) {
+         if (!fe.pathExists(workFolder)) {
             const made = mkdirp.sync(workFolder);
             if (made === null) {
                vscode.window.showErrorMessage("mkdirp.Made === null (Failed to create: " + workFolder + ")");
@@ -497,7 +463,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          }
 
          // setup params
-         const params = this.setupRunParams(pipeline, workFolder, resume);
+         const params = this.setupRunParams(pipeline, workFolder);
 
          // get path to nextflow exe from settings
          const nextflowPath = this.state.getConfigurationPropertyAsString('executablePath', 'nextflow');
@@ -578,7 +544,7 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       }
    }
 
-   setupRunParams(pipeline: Pipeline, workFolder: string, resume: boolean) : string[] {
+   setupRunParams(pipeline: Pipeline, workFolder: string) : string[] {
       let params: string[] = [];
       try {
          pipeline.option.forEach(option => {
@@ -618,9 +584,6 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             const tokens = arg.split(' ');
             params = params.concat(tokens);
          });
-         if (resume) {
-            params.push('-resume');
-         }
       } catch (err) {
          vscode.window.showErrorMessage(err.toString());
       }
