@@ -123,6 +123,15 @@ export function getFileAsJson(file: vscode.Uri): any {
    }
 }
 
+export function setFileAsJson(file: vscode.Uri, json: any): any {
+   try {
+      const text = JSON.stringify(json, undefined, 3);
+      fs.writeFileSync(file.fsPath, text);
+   } catch (err) {
+      vscode.window.showErrorMessage(err.toString());
+   }
+}
+
 export function pathExists(path: string): boolean {
    try {
       fs.accessSync(path);

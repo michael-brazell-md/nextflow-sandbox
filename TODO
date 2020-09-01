@@ -1,13 +1,21 @@
 
 TODO ---------------------------------------------------------------------
 
+MAYBE group config files under a psuedo-folder
+
+MAYBE "ASSETS" view (displays ~/.nextflow/assets/) 
+
+MAYBE support drag/drop for adding files (if possible w/ vscode API)
+
+MAYBE user may set work folder in args
+
 Remaking pipeline (deleting then making w/ same name) breaks output window (something with pipeline resources likely)
 
 USER Must include nextflow.config if other config is included on repo runs
 
 MAYBE Check valid args for command-type (e.g., "-resume" doesn't apply to config)
 
-If repo specified, add sym-links in Pipeline view to assets folder contents
+WON'T DO If repo specified, add sym-links in Pipeline view to assets folder contents
 
 Remove auto port setting when launching container; instead, get options from tasks.json (?)
 
@@ -76,3 +84,5 @@ Fixed: when running too quickly after modifying settings, args/options may be un
 Instead of Run/Resume, just have Run, resume is set in settings.json
 
 Don't do the run/archive folder thing, just do run_1... run_N and leave alone to allow for resume of any prior run
+
+"Configure from nextflow run command-line..." parses a nextflow command-line and builds a pipeline from that

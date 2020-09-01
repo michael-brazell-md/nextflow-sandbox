@@ -11,7 +11,7 @@
       "email": "mbrazell@mechdyne.com"
    },
    "icon": "media/nextflow-icon-128x128.png",
-   "version": "0.1.7",
+   "version": "0.1.8",
    "engines": {
       "vscode": "^1.41.0"
    },
@@ -142,6 +142,10 @@
             "title": "Open File"
          },
          {
+            "command": "pipelines.configFromCommandLine",
+            "title": "Configure from Nextflow Run Command-Line..."
+         },
+         {
             "command": "runs.showFile",
             "title": "Show File"
          },
@@ -231,6 +235,11 @@
                "command": "pipelines.setParams",
                "when": "view == pipelines && viewItem == stopped",
                "group": "pipeline.g"
+            },
+            {
+               "command": "pipelines.configFromCommandLine",
+               "when": "view == pipelines && viewItem == stopped",
+               "group": "pipeline.h"
             },
             {
                "command": "pipelines.remove",

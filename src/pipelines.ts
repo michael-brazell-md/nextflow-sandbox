@@ -300,6 +300,108 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
       return false;
    }
 
+   async configFromCommandLine(name: string) {
+      try {
+         let pipeline = this.state.getPipeline(name);
+         if (!pipeline) {
+            vscode.window.showErrorMessage('Pipeline not found: ' + name);
+            return;
+         }
+
+         // get name
+         const commandLine = await vscode.window.showInputBox({ prompt: 'Enter Nextflow run command-line.' });
+         if (!commandLine) {
+            return;
+         }
+
+         const tokens = commandLine.split(' ');
+
+         // ensure "nextflow run" command-line
+         if (tokens.length < 2 || tokens[0].indexOf('nextflow') === -1 || !tokens.find(value => value === 'run')) {
+            vscode.window.showErrorMessage('Invalid command-line; please specify a Nextflow run command-line using the format: nextflow run [options] Project name or repository url');
+            return;
+         }
+
+         // parse options
+         let i = 1;
+         let config = new Array<vscode.Uri>();
+         let option = new Array<string>();
+         for ( ; i < tokens.length; i++) {
+            if (tokens[i] === 'run') {
+               i++;
+               break;
+            }
+            switch (tokens[i]) {
+               case '-c':
+               case '-config':
+                  config.push(vscode.Uri.file(tokens[++i]));
+                  break;
+               case '-log': // discard options which are going to be set by this
+                  i++;
+                  break;
+               default:
+                  if (tokens[i].length > 0) {
+                     option.push(tokens[i]);
+                  }
+                  break;
+            }
+         }
+
+         // parse args
+         let arg = new Array<string>();
+         var params = undefined;
+         var hub = undefined;
+         var tag = undefined;
+         for ( ; i < tokens.length-1; i++) {
+            switch (tokens[i]) {
+               case '-params-file':
+                  params = vscode.Uri.file(tokens[++i]);
+                  break;
+               case '-hub':
+                  hub = tokens[++i];
+                  break;
+               case '-r':
+               case '-revision':
+                  tag = tokens[++i];
+                  break;
+               case '-w': // discard options which are going to be set by this
+               case '-work-dir':
+               case '-with-report':
+                  i++;
+                  break;
+               default:
+                  if (tokens[i].length > 0) {
+                     arg.push(tokens[i]);
+                  }
+                  break;
+            }
+         }
+
+         let repo_or_script = tokens[tokens.length-1];
+
+         // update pipeline
+         if (repo_or_script.indexOf('.nf') === -1) { // repo
+            pipeline.repo = new Repository(repo_or_script, hub, tag);
+            pipeline.script = undefined;
+         } else { // script
+            pipeline.repo = undefined;
+            pipeline.script = vscode.Uri.file(repo_or_script);
+         }
+         pipeline.arg = arg;
+         pipeline.config = config;
+         pipeline.option = option;
+         pipeline.params = params;
+         this.state.updatePipeline(pipeline);
+
+         // update settings.json
+         this.writeSettingsJson(name);
+
+         this.refresh();
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
+      }
+   }
+
    async pull(name: string) {
       try {
          let pipeline = this.state.getPipeline(name);
@@ -555,7 +657,6 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          params.push(workFolder + '/.nextflow.log');
          params.push('run');
          if (pipeline.repo) {
-            params.push(pipeline.repo.url);
             if (pipeline.repo.hub) {
                params.push('-hub');
                params.push(pipeline.repo.hub);
@@ -577,13 +678,15 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          params.push(workFolder);
          params.push('-with-report');
          params.push(workFolder + '/report.htm');
-         if (!pipeline.repo && pipeline.script) { // repo trumps script
-            params.push(pipeline.script.path);
-         }
          pipeline.arg.forEach(arg => {
             const tokens = arg.split(' ');
             params = params.concat(tokens);
          });
+         if (pipeline.repo) { // repo trumps script
+            params.push(pipeline.repo.url);
+         } else if (pipeline.script) {
+            params.push(pipeline.script.path);
+         }
       } catch (err) {
          vscode.window.showErrorMessage(err.toString());
       }
@@ -697,16 +800,15 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             params.push(config.path);
          });
          params.push('config');
-         if (pipeline.repo) {
-            params.push(pipeline.repo.url);
-         }
-         if (!pipeline.repo && pipeline.script) { // repo trumps script
-            params.push(pipeline.script.path);
-         }
          pipeline.arg.forEach(arg => {
             const tokens = arg.split(' ');
             params = params.concat(tokens);
          });
+         if (pipeline.repo) { // repo trumps script
+            params.push(pipeline.repo.url);
+         } else if (pipeline.script) {
+            params.push(pipeline.script.path);
+         }
       } catch (err) {
          vscode.window.showErrorMessage(err.toString());
       }
@@ -877,6 +979,26 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             }
             pipeline.repo = repo;
             this.state.updatePipeline(pipeline);
+         }
+      } catch (err) {
+         vscode.window.showErrorMessage(err.toString());
+      }
+   }
+
+   private writeSettingsJson(name: string) {
+      try {
+         const pipeline = this.state.getPipeline(name);
+         if (pipeline) {
+            const uri = vscode.Uri.file(path.join(pipeline.storagePath.fsPath, name, 'settings.json'));
+            let json = fe.getFileAsJson(uri);
+            json.args = pipeline.arg;
+            json.options = pipeline.option;
+            if (pipeline.repo) {
+               json.repository = pipeline.repo;
+            } else {
+               json.repository = new Repository('', '', '');
+            }
+            fe.setFileAsJson(uri, json);
          }
       } catch (err) {
          vscode.window.showErrorMessage(err.toString());

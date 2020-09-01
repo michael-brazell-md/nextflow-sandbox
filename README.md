@@ -113,3 +113,7 @@ Removed "Resume" context menu item for pipelines, as this may be set in the "arg
 ### 0.1.7
 
 Removed notion of archiving previous runs, as this prevents resuming.
+
+### 0.1.8
+
+Added "Configure from nextflow run command-line..." pipeline context menu item, which parses a nextflow run command-line and formulates the pipeline configuration from that.

@@ -178,6 +178,15 @@ export class NfSandbox {
          }
       });
 
+      this.registerCommand(context, 'pipelines.configFromCommandLine', (dependency: pipelines.Dependency) => {
+         try {
+            this.pipelinesTreeDataProvider.configFromCommandLine(dependency.name);
+            //this.runsTreeDataProvider.refresh(dependency.name);
+         } catch (err) {
+            vscode.window.showErrorMessage(err.toString());
+         }
+      });
+
       // runs
       this.registerCommand(context, 'runs.showFile', (resource: vscode.Uri, resources: Array<vscode.Uri>) => {
          try {
