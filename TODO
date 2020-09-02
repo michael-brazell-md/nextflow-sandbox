@@ -85,4 +85,6 @@ Instead of Run/Resume, just have Run, resume is set in settings.json
 
 Don't do the run/archive folder thing, just do run_1... run_N and leave alone to allow for resume of any prior run
 
-"Configure from nextflow run command-line..." parses a nextflow command-line and builds a pipeline from that
+Add "Configure from nextflow run command-line..." parses a nextflow command-line and builds a pipeline from that
+
+Update "Configure from nextflow run command-line..." to handle arbitrary project repo/script placement

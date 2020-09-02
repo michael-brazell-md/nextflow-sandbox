@@ -11,7 +11,7 @@
       "email": "mbrazell@mechdyne.com"
    },
    "icon": "media/nextflow-icon-128x128.png",
-   "version": "0.1.8",
+   "version": "0.1.9",
    "engines": {
       "vscode": "^1.41.0"
    },

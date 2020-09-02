@@ -117,3 +117,7 @@ Removed notion of archiving previous runs, as this prevents resuming.
 ### 0.1.8
 
 Added "Configure from nextflow run command-line..." pipeline context menu item, which parses a nextflow run command-line and formulates the pipeline configuration from that.
+
+### 0.1.9
+
+Updated "Configure from nextflow run command-line..." to better handle arbitrary project repo/script placement within the command-line.

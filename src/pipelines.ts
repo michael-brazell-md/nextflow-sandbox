@@ -317,15 +317,21 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          const tokens = commandLine.split(' ');
 
          // ensure "nextflow run" command-line
-         if (tokens.length < 2 || tokens[0].indexOf('nextflow') === -1 || !tokens.find(value => value === 'run')) {
-            vscode.window.showErrorMessage('Invalid command-line; please specify a Nextflow run command-line using the format: nextflow run [options] Project name or repository url');
+         if (tokens.length <= 2 || tokens[0].indexOf('nextflow') === -1 || !tokens.find(value => value === 'run')) {
+            vscode.window.showWarningMessage('Please specify a Nextflow "run" command-line using the format: nextflow [options] run [args] repository-url-or-pipeline-script');
             return;
          }
 
-         // parse options
-         let i = 1;
          let config = new Array<vscode.Uri>();
          let option = new Array<string>();
+         let arg = new Array<string>();
+         var params = undefined;
+         var hub = undefined;
+         var tag = undefined;
+         var repo_or_script = '';
+
+         // parse nextflow options
+         let i = 1; // skip 'nextflow'
          for ( ; i < tokens.length; i++) {
             if (tokens[i] === 'run') {
                i++;
@@ -347,12 +353,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             }
          }
 
-         // parse args
-         let arg = new Array<string>();
-         var params = undefined;
-         var hub = undefined;
-         var tag = undefined;
-         for ( ; i < tokens.length-1; i++) {
+         // parse run args
+         for ( ; i < tokens.length; i++) {
             switch (tokens[i]) {
                case '-params-file':
                   params = vscode.Uri.file(tokens[++i]);
@@ -369,15 +371,35 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                case '-with-report':
                   i++;
                   break;
+               case '-bucket-dir': // args with parameters
+               case '-entry':
+               case '-lib':
+               case '-name':
+               case '-profile':
+               case '-qs':
+               case '-queue-size':
+               case '-test':
+               case '-user':
+               case '-with-conda':
+               case '-N':
+               case '-with-notification':
+               case '-with-timeline':
+               case '-with-trace':
+               case '-with-weblog':
+                  arg.push(tokens[i]);
+                  arg.push(tokens[++i]);
+                  break;
                default:
                   if (tokens[i].length > 0) {
-                     arg.push(tokens[i]);
+                     if (tokens[i][0] === '-') {
+                        arg.push(tokens[i]);
+                     } else { // doesn't start with dash; assume this is the repo or script
+                        repo_or_script = tokens[i];
+                     }
                   }
                   break;
             }
          }
-
-         let repo_or_script = tokens[tokens.length-1];
 
          // update pipeline
          if (repo_or_script.indexOf('.nf') === -1) { // repo
