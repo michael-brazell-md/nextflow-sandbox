@@ -386,8 +386,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                case '-with-timeline':
                case '-with-trace':
                case '-with-weblog':
-                  arg.push(tokens[i]);
-                  arg.push(tokens[++i]);
+                  arg.push(tokens[i] + ' ' + tokens[++i]);
+                  //arg.push(tokens[++i]);
                   break;
                default:
                   if (tokens[i].length > 0) {
