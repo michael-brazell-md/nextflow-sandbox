@@ -9,6 +9,7 @@ import { parentPort } from 'worker_threads';
 import { arch } from 'os';
 import { ENGINE_METHOD_DIGESTS } from 'constants';
 import { fail } from 'assert';
+import { settings } from 'cluster';
 
 export class Dependency extends vscode.TreeItem {
 
@@ -25,10 +26,7 @@ export class Dependency extends vscode.TreeItem {
                public description?: string,
                public collapsibleState?: vscode.TreeItemCollapsibleState) {
       super(name, collapsibleState);
-   }
-
-   get tooltip(): string | undefined {
-      return this.resourceUri?.fsPath;
+      this.tooltip = this.resourceUri?.fsPath;
    }
 
    isDirectory(): boolean {
@@ -180,7 +178,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
             }
          }
          return Promise.resolve(pipelines);
-      } catch (err) {}
+      } catch (err: any) {}
       return Promise.resolve([]);
    }
 
@@ -220,7 +218,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
                }
             }
          }
-      } catch (err) {
+      } catch (err: any) {
          vscode.window.showErrorMessage(err.toString());
       }
       return Promise.resolve(result);
@@ -280,7 +278,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
             }
             return a.isDirectory() ? -1 : 1;
          });
-      } catch (err) {
+      } catch (err: any) {
          vscode.window.showErrorMessage(err.toString());
       }
       return decorated;
@@ -297,7 +295,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
                decorated.children.push(child);
             }
          });
-      } catch (err) {
+      } catch (err: any) {
          vscode.window.showErrorMessage(err.toString());
       }
       return decorated;
@@ -338,7 +336,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
                      } 
                   }
                }
-            } catch (err) {
+            } catch (err: any) {
                vscode.window.showErrorMessage(err.toString());
             }
             decorated.children.push(child);
@@ -396,7 +394,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
             dependency.children = dependencies;
             result.push(dependency);
          });
-      } catch (err) {
+      } catch (err: any) {
          vscode.window.showErrorMessage(err.toString());
       }
       return result;
@@ -420,11 +418,13 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
 
    openInTerminal(uri: vscode.Uri) {
       try {
-         const terminal = vscode.window.createTerminal('Nextflow Sandbox');
+         const shellPath = this.state.getConfigurationPropertyAsString('shellPath', '');
+         const shellArgs = this.state.getConfigurationPropertyAsString('shellArgs', '');
+         const terminal = vscode.window.createTerminal('Nextflow Sandbox', shellPath, shellArgs);
          const fsPath = uri.fsPath;
          terminal.sendText('cd "' + fsPath + '"');
          terminal.show();
-      } catch (err) {
+      } catch (err: any) {
          vscode.window.showErrorMessage(err.toString());
       }
    }
@@ -513,14 +513,16 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          });
 
          // create/show terminal
-         let terminal = vscode.window.createTerminal(containerName + " - Nextflow Sandbox");
+         const shellPath = this.state.getConfigurationPropertyAsString('shellPath', '');
+         const shellArgs = this.state.getConfigurationPropertyAsString('shellArgs', '');
+         let terminal = vscode.window.createTerminal(containerName + " - Nextflow Sandbox", shellPath, shellArgs);
          terminal.show();
          terminal.processId.then(pid => {
             // output command being executed
             // (this will execute the command)
             terminal.sendText(docker, true);
          });
-      } catch(err) {
+      } catch (err: any) {
          vscode.window.showWarningMessage('Something went wrong; failed to launch container: ' + err.toString());
       }
    }
@@ -528,7 +530,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
    private pathExists(path: string): boolean {
       try {
          fs.accessSync(path);
-      } catch (err) {
+      } catch (err: any) {
          return false;
       }
 

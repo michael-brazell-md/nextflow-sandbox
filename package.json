@@ -19,8 +19,6 @@
       "Other"
    ],
    "activationEvents": [
-      "onView:pipelines",
-      "onView:runs"
    ],
    "main": "./out/extension.js",
    "contributes": {
@@ -30,7 +28,7 @@
             "nextflow-sandbox.executablePath": {
                "type": "string",
                "description": "Path to the Nextflow executable",
-               "default": "nextflow",
+               "default": "~/nextflow",
                "title": "Nextflow Executable Path"
             },
             "nextflow-sandbox.storagePath": {
@@ -44,6 +42,18 @@
                "description": "Automatically show log upon Nextflow exit",
                "default": true,
                "title": "Automatically Show Log Upon Nextflow exit"
+            },
+            "nextflow-sandbox.shellPath": {
+               "type": "string",
+               "description": "Path to a custom shell executable to be used when creating terminals",
+               "default": "",
+               "title": "Custom Shell Executable Path"
+            },
+            "nextflow-sandbox.shellArgs": {
+               "type": "string",
+               "description": "Args for the custom shell executable",
+               "default": "",
+               "titiel": "Custom Shell Executable Args"
             }
          }
       },
