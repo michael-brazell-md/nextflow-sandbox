@@ -178,7 +178,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
             }
          }
          return Promise.resolve(pipelines);
-      } catch (err: any) {}
+      } catch (err) {}
       return Promise.resolve([]);
    }
 
@@ -218,8 +218,8 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
                }
             }
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
       return Promise.resolve(result);
    }
@@ -278,8 +278,8 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
             }
             return a.isDirectory() ? -1 : 1;
          });
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
       return decorated;
    }
@@ -295,8 +295,8 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
                decorated.children.push(child);
             }
          });
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
       return decorated;
    }
@@ -336,8 +336,8 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
                      } 
                   }
                }
-            } catch (err: any) {
-               vscode.window.showErrorMessage(err.toString());
+            } catch (err) {
+               if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
             }
             decorated.children.push(child);
          }
@@ -394,8 +394,8 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
             dependency.children = dependencies;
             result.push(dependency);
          });
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
       return result;
    }
@@ -424,8 +424,8 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          const fsPath = uri.fsPath;
          terminal.sendText('cd "' + fsPath + '"');
          terminal.show();
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -522,15 +522,15 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
             // (this will execute the command)
             terminal.sendText(docker, true);
          });
-      } catch (err: any) {
-         vscode.window.showWarningMessage('Something went wrong; failed to launch container: ' + err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showWarningMessage('Something went wrong; failed to launch container: ' + err.toString());
       }
    }
 
    private pathExists(path: string): boolean {
       try {
          fs.accessSync(path);
-      } catch (err: any) {
+      } catch (err) {
          return false;
       }
 

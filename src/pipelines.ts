@@ -115,8 +115,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                   cp.spawn('rm', ['-r', pipelineFolder]).on('close', () => {
                      this.doAdd(name, storagePath);
                   });
-               } catch (err: any) {
-                  vscode.window.showWarningMessage(err.toString());
+               } catch (err) {
+                  if (err instanceof Error) vscode.window.showWarningMessage(err.toString());
                }
             } else if (selection === 'Cancel') {
                return;
@@ -124,8 +124,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          } else {
             this.doAdd(name, storagePath);
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -156,8 +156,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
 
          // invoke add event cb
          this.on('added', name);
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -174,8 +174,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             this.state.updatePipeline(pipeline);
             this.refresh();
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -192,8 +192,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             this.state.updatePipeline(pipeline);
             this.refresh();
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -211,8 +211,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             this.state.updatePipeline(pipeline);
             this.refresh();
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -246,8 +246,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                }
             } 
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
 
       return Promise.resolve(false);
@@ -288,8 +288,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             this.refresh();
             return true;
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
       return false;
    }
@@ -412,8 +412,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          this.writeSettingsJson(name);
 
          this.refresh();
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -491,8 +491,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                await vscode.window.showInformationMessage('Nextflow process exited with code: ' + code.toString(), 'OK') :
                await vscode.window.showWarningMessage('Nextflow process exited with code: ' + code.toString()), 'OK');
          });
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -515,8 +515,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                params.push(pipeline.repo.tag);
             }
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
       return params;
    }
@@ -550,8 +550,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          const workFolder = pipelineFolder + '/run_' + pipeline.run;
 
          this.doRun(name, workFolder);
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -595,14 +595,14 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          // clear-out last .nextflow.log (to prevent NF from making a backup)
          try {
             fs.writeFileSync(path.join(workFolder, '.nextflow.log'), '');
-         } catch (err: any) {}
+         } catch (err) {}
          // show .nextflow.log
          //vscode.window.showTextDocument(vscode.Uri.file(path.join(workFolder, '.nextflow.log')));
 
          // remove last report.htm (to prevent NF from making a backup)
          try {
             cp.spawnSync('rm', [path.join(workFolder, 'report.htm')]);
-         } catch (err: any) {}
+         } catch (err) {}
 
          // clear/show output
          pipelineRes.outputCh.clear();
@@ -656,8 +656,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                cp.spawn('open', [path.join(workFolder, 'report.htm')]);
             }
          });
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -702,8 +702,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          } else if (pipeline.script) {
             params.push(pipeline.script.path);
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
       return params;
    }
@@ -719,8 +719,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
 
             pipelineRes.nextflow.kill("SIGINT");
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -798,8 +798,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
                await vscode.window.showInformationMessage('Nextflow process exited with code: ' + code.toString(), 'OK') :
                await vscode.window.showWarningMessage('Nextflow process exited with code: ' + code.toString()), 'OK');
          });
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -824,8 +824,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          } else if (pipeline.script) {
             params.push(pipeline.script.path);
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
       return params;
    }
@@ -861,8 +861,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             this.refresh();
             return true;
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
       return false;
    }
@@ -898,8 +898,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             this.refresh();
             return true;
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
       return false;
    }
@@ -948,8 +948,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
          }
 
          return Promise.resolve([]);
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -974,8 +974,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             } catch(err) {}
          }
          return undefined;
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -995,8 +995,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             pipeline.repo = repo;
             this.state.updatePipeline(pipeline);
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
@@ -1015,8 +1015,8 @@ export class PipelinesTreeDataProvider implements vscode.TreeDataProvider<Depend
             }
             fe.setFileAsJson(uri, json);
          }
-      } catch (err: any) {
-         vscode.window.showErrorMessage(err.toString());
+      } catch (err) {
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 

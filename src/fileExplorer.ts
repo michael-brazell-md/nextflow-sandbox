@@ -119,7 +119,7 @@ export function getFileAsJson(file: vscode.Uri): any {
       }
       return JSON.parse(text);
    } catch (err) {
-      vscode.window.showErrorMessage(err.toString());
+      if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
    }
 }
 
@@ -128,7 +128,7 @@ export function setFileAsJson(file: vscode.Uri, json: any): any {
       const text = JSON.stringify(json, undefined, 3);
       fs.writeFileSync(file.fsPath, text);
    } catch (err) {
-      vscode.window.showErrorMessage(err.toString());
+      if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
    }
 }
 

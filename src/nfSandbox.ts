@@ -61,7 +61,7 @@ export class NfSandbox {
          try {
             this.pipelinesTreeDataProvider.add();
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -69,7 +69,7 @@ export class NfSandbox {
          try {
             this.pipelinesTreeDataProvider.addConfig(dependency.name);
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -77,7 +77,7 @@ export class NfSandbox {
          try {
             this.pipelinesTreeDataProvider.setParams(dependency.name);
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -85,7 +85,7 @@ export class NfSandbox {
          try {
             this.pipelinesTreeDataProvider.setScript(dependency.name);
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -93,7 +93,7 @@ export class NfSandbox {
          try {
             this.pipelinesTreeDataProvider.refresh();
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -105,7 +105,7 @@ export class NfSandbox {
                this.runsTreeDataProvider.refresh(dependency.name);
             });
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -114,7 +114,7 @@ export class NfSandbox {
             this.pipelinesTreeDataProvider.stop(dependency.name);
             this.runsTreeDataProvider.refresh(dependency.name);
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -123,7 +123,7 @@ export class NfSandbox {
             this.pipelinesTreeDataProvider.config(dependency.name);
             this.runsTreeDataProvider.refresh(dependency.name);
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -132,7 +132,7 @@ export class NfSandbox {
             this.pipelinesTreeDataProvider.pull(dependency.name);
             this.runsTreeDataProvider.refresh(dependency.name);
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -142,7 +142,7 @@ export class NfSandbox {
             if (removed) {
             }
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -150,7 +150,7 @@ export class NfSandbox {
          try {
             const removed = this.pipelinesTreeDataProvider.remDep(dependency);
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -158,7 +158,7 @@ export class NfSandbox {
          try {
             this.pipelinesTreeDataProvider.moveUp(dependency);
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -166,7 +166,7 @@ export class NfSandbox {
          try {
             this.pipelinesTreeDataProvider.moveDown(dependency);
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -174,7 +174,7 @@ export class NfSandbox {
          try {
             vscode.window.showTextDocument(resource);
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -183,7 +183,7 @@ export class NfSandbox {
             this.pipelinesTreeDataProvider.configFromCommandLine(dependency.name);
             //this.runsTreeDataProvider.refresh(dependency.name);
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -192,7 +192,7 @@ export class NfSandbox {
          try {
             vscode.window.showTextDocument(resource); // TODO: multi
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -202,7 +202,7 @@ export class NfSandbox {
                cp.spawn('open', [resource.resourceUri.fsPath]); // TODO: multi
             }
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -212,7 +212,7 @@ export class NfSandbox {
                cp.spawn('open', [resource.resourceUri.path]); // TODO: multi
             }
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -222,7 +222,7 @@ export class NfSandbox {
                this.runsTreeDataProvider.openInTerminal(resource.resourceUri);
             }
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -243,7 +243,7 @@ export class NfSandbox {
                this.runsTreeDataProvider.refresh();
             });
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -251,7 +251,7 @@ export class NfSandbox {
          try {
             this.runsTreeDataProvider.refresh();
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -259,7 +259,7 @@ export class NfSandbox {
          try {
             this.runsTreeDataProvider.toggleDecorated();
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
 
@@ -269,7 +269,7 @@ export class NfSandbox {
                this.runsTreeDataProvider.launchContainer(resource.resourceUri);
             }
          } catch (err) {
-            vscode.window.showErrorMessage(err.toString());
+            if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
          }
       });
    }
@@ -279,7 +279,7 @@ export class NfSandbox {
          let disposable = vscode.commands.registerCommand(command, callback);
          context.subscriptions.push(disposable);
       } catch (err) {
-         vscode.window.showErrorMessage(err.toString());
+         if (err instanceof Error) vscode.window.showErrorMessage(err.toString());
       }
    }
 
