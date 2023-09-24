@@ -44,6 +44,8 @@ As an isolated user, the use-cases I have added support for are clearly limited 
 
 If you would like to [report](https://github.com/michael-brazell-md/nextflow-sandbox/issues) a bug or feature request, please do so on the github [repository](https://github.com/michael-brazell-md/nextflow-sandbox) for this project.  I will make every effort to respond in a timely manner.
 
+If you enjoy using this extension, please leave a rating!
+
 ### 0.0.1
 
 Initial release of Nextflow Sandbox.
