@@ -38,7 +38,7 @@ class PipelineResources {
    nextflow: cp.ChildProcess | undefined = undefined;
 
    constructor(public readonly name: string) {
-      this.outputCh = vscode.window.createOutputChannel(name + " - Nextflow Sandbox");
+      this.outputCh = vscode.window.createOutputChannel(name + " - Nextflow Sandbox (v2)");
    }
 }
 

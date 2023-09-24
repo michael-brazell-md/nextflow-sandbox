@@ -1,14 +1,14 @@
 {
-   "name": "nextflow-sandbox",
-   "displayName": "Nextflow Sandbox",
+   "name": "nextflow-sandbox-2",
+   "displayName": "Nextflow Sandbox (v2)",
    "description": "Workspace tree views and utilities for Nextflow pipelines",
    "repository": {
       "url": "https://github.com/michael-brazell-md/nextflow-sandbox"
    },
-   "publisher": "mbrazell",
+   "publisher": "MichaelCBrazell",
    "author": {
-      "name": "Michael Brazell",
-      "email": "mbrazell@mechdyne.com"
+      "name": "Michael C. Brazell",
+      "email": "michael.brazell@pm.me"
    },
    "icon": "media/nextflow-icon-128x128.png",
    "version": "0.2.0",
@@ -23,7 +23,7 @@
    "main": "./out/extension.js",
    "contributes": {
       "configuration": {
-         "title": "Nextflow Sandbox",
+         "title": "Nextflow Sandbox (v2)",
          "properties": {
             "nextflow-sandbox.executablePath": {
                "type": "string",
@@ -61,7 +61,7 @@
          "activitybar": [
             {
                "id": "nftr-explorer",
-               "title": "Nextflow Sandbox",
+               "title": "Nextflow Sandbox (v2)",
                "icon": "media/NF.svg"
             }
          ]

@@ -1,4 +1,4 @@
-# Nextflow Sandbox Extension for Visual Studio Code
+# Nextflow Sandbox (version 2) Extension for Visual Studio Code
 
 This extension provides convenient tree views and ease-of-use utilities for managing, configuring, running, and debugging Nextflow pipelines.
 

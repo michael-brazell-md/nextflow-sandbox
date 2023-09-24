@@ -420,7 +420,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
       try {
          const shellPath = this.state.getConfigurationPropertyAsString('shellPath', '');
          const shellArgs = this.state.getConfigurationPropertyAsString('shellArgs', '');
-         const terminal = vscode.window.createTerminal('Nextflow Sandbox', shellPath, shellArgs);
+         const terminal = vscode.window.createTerminal('Nextflow Sandbox (v2)', shellPath, shellArgs);
          const fsPath = uri.fsPath;
          terminal.sendText('cd "' + fsPath + '"');
          terminal.show();
@@ -515,7 +515,7 @@ export class RunsTreeDataProvider implements vscode.TreeDataProvider<Dependency>
          // create/show terminal
          const shellPath = this.state.getConfigurationPropertyAsString('shellPath', '');
          const shellArgs = this.state.getConfigurationPropertyAsString('shellArgs', '');
-         let terminal = vscode.window.createTerminal(containerName + " - Nextflow Sandbox", shellPath, shellArgs);
+         let terminal = vscode.window.createTerminal(containerName + " - Nextflow Sandbox (v2)", shellPath, shellArgs);
          terminal.show();
          terminal.processId.then(pid => {
             // output command being executed
