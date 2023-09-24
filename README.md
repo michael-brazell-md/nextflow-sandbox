@@ -29,6 +29,8 @@ This extension contributes the following settings:
 * `nextflow-sandbox.executablePath`: path to the Nextflow executable
 * `nextflow-sandbox.storagePath`: path where Nextflow will store local work
 * `nextflow-sandbox.autoShowLog`: automatically show log upon Nextflow exit
+* `nextflow-sandbox.shellPath`: custom shell executable path
+* `nextflow-sandbox.shellArgs`: custom shell executable path
 
 ## Known Issues
 
@@ -121,3 +123,7 @@ Added "Configure from nextflow run command-line..." pipeline context menu item, 
 ### 0.1.9
 
 Updated "Configure from nextflow run command-line..." to better handle arbitrary project repo/script placement within the command-line.
+
+### 0.2.0
+
+Added shellPath and shellArgs settings.
