@@ -30,7 +30,7 @@ This extension contributes the following settings:
 * `nextflow-sandbox.storagePath`: path where Nextflow will store local work
 * `nextflow-sandbox.autoShowLog`: automatically show log upon Nextflow exit
 * `nextflow-sandbox.shellPath`: custom shell executable path
-* `nextflow-sandbox.shellArgs`: custom shell executable path
+* `nextflow-sandbox.shellArgs`: custom shell executable args
 
 ## Known Issues
 
